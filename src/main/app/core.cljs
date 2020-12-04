@@ -7,6 +7,7 @@
    [app.timer :refer [timer]]
    [app.crud :refer [crud]]
    [app.circles :as circles]
+   [app.spreadsheet :as spreadsheet]
    [reagent.core :as r]
    [reagent.dom :as rd]))
 
@@ -19,5 +20,6 @@
     [flight-booker]
     [timer]
     [crud]
-    [circles/main]]
+    [circles/main]
+    [spreadsheet/main]]
    (js/document.getElementById "app")))
