@@ -2,7 +2,7 @@
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]))
 
-(defonce circles (r/atom {}))
+(defonce circles (r/atom (sorted-map)))
 (defonce canvas (r/atom nil))
 (defonce undo-queue (r/atom []))
 (defonce redo-queue (r/atom []))
