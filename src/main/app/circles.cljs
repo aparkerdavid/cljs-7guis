@@ -115,6 +115,41 @@
   (doall (map #(draw-circle % ctx) (vals circles)))
   (draw-selected-circle (selected-circle circles (first mouse-pos)) ctx))
 
+(defn editor []
+  (fn []
+    (if @editing-circle
+      [:div
+       [:input
+        {:type "range"
+         :min 10
+         :max 200
+         :value (:r @editing-circle)
+         :on-change
+         (fn [e]
+           (let [v (-> e .-target .-value)]
+             (swap! editing-circle #(assoc % :r v))))}]
+       [:button
+        {:on-click
+         (fn [e]
+           (let [{id :id r :r} @editing-circle]
+             (resize-circle id r)
+             (reset! editing-circle nil)))}
+        "Done"]
+       [:button
+        {:on-click
+         (fn [e]
+           (reset! editing-circle nil))}
+        "Cancel"]]
+      [:div
+       [:button
+        {:on-click
+         undo}
+        "Undo"]
+       [:button
+        {:on-click
+         redo}
+        "Redo"]])))
+
 (defn ^:export main []
   (let [mouse-pos (r/atom [])
         current-id (r/atom 0)]
