@@ -23,23 +23,25 @@
     (reset! redo-queue [])))
 
 (defn undo []
-  (let [[id op] (last @undo-queue)
-        circle [id (@circles id)]]
-    (if (nil? op)
-      (do
-        (swap! circles #(dissoc % id))
-        (swap! undo-queue pop)
-        (swap! redo-queue #(conj % circle)))
-      (do
-        (swap! circles #(conj % {id op}))
-        (swap! undo-queue pop)
-        (swap! redo-queue #(conj % circle))))))
+  (when (last @undo-queue)
+    (let [[id op] (last @undo-queue)
+          circle [id (@circles id)]]
+      (if (nil? op)
+        (do
+          (swap! circles #(dissoc % id))
+          (swap! undo-queue pop)
+          (swap! redo-queue #(conj % circle)))
+        (do
+          (swap! circles #(conj % {id op}))
+          (swap! undo-queue pop)
+          (swap! redo-queue #(conj % circle)))))))
 
 (defn redo []
-  (let [[id op] (last @redo-queue)]
-    (swap! undo-queue #(conj % [id (@circles id)]))
-    (swap! circles #(assoc % id op))
-    (swap! redo-queue pop)))
+  (when (last @redo-queue)
+    (let [[id op] (last @redo-queue)]
+      (swap! undo-queue #(conj % [id (@circles id)]))
+      (swap! circles #(assoc % id op))
+      (swap! redo-queue pop))))
 
 (defn xy [e]
   (let [rect (.getBoundingClientRect (.-target e))]
