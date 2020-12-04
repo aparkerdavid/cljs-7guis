@@ -43,7 +43,7 @@
       (swap! circles #(assoc % id op))
       (swap! redo-queue pop))))
 
-(defn xy [e]
+(defn mouse-xy [e]
   (let [rect (.getBoundingClientRect (.-target e))]
     [(- (.-clientX e) (.-left rect))
      (- (.-clientY e) (.-top rect))]))
