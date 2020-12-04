@@ -204,3 +204,61 @@ Push circle index and current radius to undo vector
 Assoc the new radius onto the circle
 
 The prompt calls for the radius adjustment control to appear in a popup window, but this is a pretty bad idea on the web.  Instead, we're going to have it replace the Undo and Redo controls, which shouldn't be usable during radius adjustment anyway.
+
+
+* Spreadsheet
+
+Parts of a spreadsheet:
+
+** Cells, each of which has:
+
+*** a Value
+The user cannot edit the Value of a cell. It is calculated by the spreadsheet based on the cell's Formula.
+
+*** a Formula
+The formula is not necessarily a "formula" in the colloquial sense, it can just be a number.
+
+*** a list of Children
+Children are the cells whose value depends upon the value of the cell in question. 
+  
+*** A function to calculate a Value from a Formula.
+
+*** A function that determines a cell's Parents from its Formula.
+Parents are the cells whose value the value of the cell in question is dependent upon.
+
+*** When a cell's formula or value changes:
+- Determine the cell's Parents as per the old formula.
+- Determine the cell's Parents as per the new formula.
+- Update the old and new parents' lists of Children accordingly.
+- Recalculate cell's Value.
+
+*** When a cell's Value is recalculated, recalculate the values of its Children, if it has them.
+(This is a recursive operation.)
+
+** A syntax for Formulas
+
+Something Clojure-based would be easy to implement, and pleasant to use.
+A subset of Clojure that omits parens for top-level forms, and allows only:
+
+- arithmetic functions
+- numbers
+- keywords in :[A-Z][1-99] format (used to refer to cells)
+
+Ex:
+#+begin_src
+ + 1 2
+
+ * 1 (+ 2 2) 5
+
+ sqrt (- :A1 (/ 5 :B2))
+#+end_src
+
+
+** A User Interface
+
+Present the Cells as a grid of fields, [A-Z] x [1-99]. Traditional spreadsheet style.
+Display the Value of each Cell in its corresponding field.
+When the field is double-clicked, display an editable readout of the Cell's Formula.
+When editing:
+- press Enter to commit the Formula update.
+- press Escape or click elsewhere to cancel the edit.
