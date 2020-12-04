@@ -2,12 +2,13 @@
   (:require [reagent.core :as r]
             [reagent.dom :as rdom]))
 
-(defonce circles (r/atom {}))
+(defonce circles (r/atom (sorted-map)))
 (defonce canvas (r/atom nil))
 (defonce undo-queue (r/atom []))
 (defonce redo-queue (r/atom []))
 (defonce mouse-pos (r/atom []))
 (defonce current-id (r/atom 0))
+(def editing-circle (r/atom nil))
 
 (defn add-circle [[x y]]
   (swap! circles #(assoc % @current-id {:x x :y y :r 50}))
@@ -22,25 +23,27 @@
     (reset! redo-queue [])))
 
 (defn undo []
-  (let [[id op] (last @undo-queue)
-        circle [id (@circles id)]]
-    (if (nil? op)
-      (do
-        (swap! circles #(dissoc % id))
-        (swap! undo-queue pop)
-        (swap! redo-queue #(conj % circle)))
-      (do
-        (swap! circles #(conj % {id op}))
-        (swap! undo-queue pop)
-        (swap! redo-queue #(conj % circle))))))
+  (when (last @undo-queue)
+    (let [[id op] (last @undo-queue)
+          circle [id (@circles id)]]
+      (if (nil? op)
+        (do
+          (swap! circles #(dissoc % id))
+          (swap! undo-queue pop)
+          (swap! redo-queue #(conj % circle)))
+        (do
+          (swap! circles #(conj % {id op}))
+          (swap! undo-queue pop)
+          (swap! redo-queue #(conj % circle)))))))
 
 (defn redo []
-  (let [[id op] (last @redo-queue)]
-    (swap! undo-queue #(conj % [id (@circles id)]))
-    (swap! circles #(assoc % id op))
-    (swap! redo-queue pop)))
+  (when (last @redo-queue)
+    (let [[id op] (last @redo-queue)]
+      (swap! undo-queue #(conj % [id (@circles id)]))
+      (swap! circles #(assoc % id op))
+      (swap! redo-queue pop))))
 
-(defn xy [e]
+(defn mouse-xy [e]
   (let [rect (.getBoundingClientRect (.-target e))]
     [(- (.-clientX e) (.-left rect))
      (- (.-clientY e) (.-top rect))]))
@@ -51,29 +54,16 @@
     (js/Math.pow (- x1 x2) 2)
     (js/Math.pow (- y1 y2) 2))))
 
-(defn selected-circle [circles mouse-pos]
-  (let [[mouse-x mouse-y] mouse-pos
-        distance (fn [{circle-x :x circle-y :y}]
-                   (distance mouse-x mouse-y circle-x circle-y))]
-    (->> circles
-         (sort-by (fn [[k v]] (distance v)))
-         first
-         ((fn [[k v]]
-            (when (< (distance v) (:r v))
-              v))))))
-
-(defn selected-circle-2 [mouse-pos]
+(defn selected-circle [mouse-pos]
   (let [[mouse-x mouse-y] mouse-pos
         distance (fn [{circle-x :x circle-y :y}]
                    (distance mouse-x mouse-y circle-x circle-y))]
     (->> @circles
+         (filter (fn [[k v]] (< (distance v) (:r v))))
          (sort-by (fn [[k v]] (distance v)))
-         first
-         ((fn [[k v]]
-            (when (< (distance v) (:r v))
-              v))))))
+         first)))
 
-(defn draw-circle-2 [{x :x y :y r :r} color]
+(defn draw-circle [{x :x y :y r :r} color]
   (let [ctx (.getContext @canvas "2d")]
     (set! (. ctx -fillStyle) color)
     (.moveTo ctx x y)
@@ -82,35 +72,67 @@
     (.fill ctx)
     (.stroke ctx)))
 
-(defn draw-circle [{x :x y :y r :r} ctx]
-  (set! (. ctx -fillStyle) "#fff")
-  (.moveTo ctx x y)
-  (.beginPath ctx)
-  (.arc ctx x y r 0 (* 2 js/Math.PI))
-  (.fill ctx)
-  (.stroke ctx))
-
-(defn draw-selected-circle [{x :x y :y r :r} ctx]
-  (set! (. ctx -fillStyle) "#666")
-  (.moveTo ctx x y)
-  (.beginPath ctx)
-  (.arc ctx x y r 0 (* 2 js/Math.PI))
-  (.fill ctx)
-  (.stroke ctx))
-
 (defn redraw [mouse-pos]
   (let [ctx (.getContext @canvas "2d")
-        selected-circle (selected-circle-2 mouse-pos)]
+        current-selected-circle (selected-circle mouse-pos)]
     (set! (. ctx -fillStyle) "#eee")
     (.fillRect ctx 0 0 800 600)
-    (doall (map #(draw-circle-2 % "#fff") (vals @circles)))
-    (draw-circle-2 selected-circle "#666")))
+    (doall (map
 
-(defn draw-all-circles [circles ctx & mouse-pos]
-  (set! (. ctx -fillStyle) "#eee")
-  (.fillRect ctx 0 0 800 600)
-  (doall (map #(draw-circle % ctx) (vals circles)))
-  (draw-selected-circle (selected-circle circles (first mouse-pos)) ctx))
+            (fn [[k v]]
+
+              (if (= k (:id @editing-circle))
+                (draw-circle (assoc v :r (:r @editing-circle)) "red")
+                (draw-circle v "white")))
+
+            @circles))
+
+    (if
+     (= (first current-selected-circle) (:id @editing-circle))
+      (draw-circle (assoc (last current-selected-circle) :r (:r @editing-circle)) "red")
+      (draw-circle (last current-selected-circle) "#666"))))
+
+(defn handle-right-click [e]
+  (let [current-selected-circle (selected-circle (mouse-xy e))]
+    (.preventDefault e)
+    (when current-selected-circle
+      (reset! editing-circle {:id (first current-selected-circle)
+                              :r (:r (last current-selected-circle))}))))
+
+(defn editor []
+  (fn []
+    (if @editing-circle
+      [:div
+       [:input
+        {:type "range"
+         :min 10
+         :max 200
+         :value (:r @editing-circle)
+         :on-change
+         (fn [e]
+           (let [v (-> e .-target .-value)]
+             (swap! editing-circle #(assoc % :r v))))}]
+       [:button
+        {:on-click
+         (fn [e]
+           (let [{id :id r :r} @editing-circle]
+             (resize-circle id r)
+             (reset! editing-circle nil)))}
+        "Done"]
+       [:button
+        {:on-click
+         (fn [e]
+           (reset! editing-circle nil))}
+        "Cancel"]]
+      [:div
+       [:button
+        {:on-click
+         undo}
+        "Undo"]
+       [:button
+        {:on-click
+         redo}
+        "Redo"]])))
 
 (defn ^:export main []
   (let [mouse-pos (r/atom [])
@@ -127,14 +149,13 @@
           (set! (. ctx -fillStyle) "#eee")
           (.fillRect ctx 0 0 800 600))
         (add-watch circles :component-update-circles #(r/force-update this))
-        (add-watch mouse-pos :component-update-mouse-pos #(r/force-update this)))
+        (add-watch mouse-pos :component-update-mouse-pos #(r/force-update this))
+        (add-watch editing-circle :component-update-editing-circle #(r/force-update this)))
 
       :component-did-update
       (fn [this]
         (let [ctx (.getContext @canvas "2d")]
-          (redraw @mouse-pos)
-          ;; (draw-all-circles @circles ctx @mouse-pos)
-          ))
+          (redraw @mouse-pos)))
 
       :reagent-render
       (fn []
@@ -145,10 +166,11 @@
            :height 600
            :on-mouse-move
            (fn [e]
-             (reset! mouse-pos (xy e)))
-
+             (reset! mouse-pos (mouse-xy e)))
+           :on-context-menu
+           handle-right-click
            :on-click
            (fn [e]
-             (add-circle (xy e)))}]
-         [:button {:on-click undo} "Undo"]
-         [:button {:on-click redo} "Redo"]])})))
+             (when (nil? @editing-circle)
+               (add-circle (mouse-xy e))))}]
+         [editor]])})))
