@@ -173,7 +173,7 @@ If we wanted to, we could re-implement the Temperature Converter using =flight-d
 * Circles
 Add circle:
 Push radius and position to circles vector.
-Push =:circle= to undo vector.
+Push circle to undo vector.
 Clear redo vector.
 
 Resize circle:
@@ -183,9 +183,9 @@ Clear redo vector.
 
 Undo:
 Look at the last item in the undo vector.
-If it's =:create=, we're undoing circle creation.
-Push =:create= and the circle's position to the redo vector.
-Remove the last circle from the circles vector 
+If the radius is nil, we're undoing circle creation.
+Push the circle's current radius and position to the redo vector.
+Remove the last circle from the circles vector
 
 If it's an index and a radius, we're undoing a resize:
 Push the index and current radius to redo vector.
