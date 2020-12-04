@@ -8,6 +8,7 @@
 (defonce redo-queue (r/atom []))
 (defonce mouse-pos (r/atom []))
 (defonce current-id (r/atom 0))
+(def editing-circle (r/atom nil))
 
 (defn add-circle [[x y]]
   (swap! circles #(assoc % @current-id {:x x :y y :r 50}))
