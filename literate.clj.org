@@ -226,9 +226,13 @@ Children are the cells whose value depends upon the value of the cell in questio
 *** A function that determines a cell's Parents from its Formula.
 Parents are the cells whose value the value of the cell in question is dependent upon.
 
-*** When a cell's formula or value changes:
-- Determine the cell's Parents as per the old formula.
-- Determine the cell's Parents as per the new formula.
+*** When a cell's Formula changes:
+- Determine the Cell's Parents as per the new formula.
+- Follow the Parents-of-Parents of the Cell in question until we find either:
+  - a Cell with no parents
+  - the Cell in question
+   If the Cell in question is found, reject the formula change as cyclical.
+- Determine the Cell's Parents as per the old formula.
 - Update the old and new parents' lists of Children accordingly.
 - Recalculate cell's Value.
 
