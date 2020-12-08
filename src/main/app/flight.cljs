@@ -59,7 +59,7 @@
                   (str ", returning on " (@context :return-date)))))))}
    "Submit"])
 
-(defn flight-booker []
+(defn main []
   (let [state (r/atom {:flight-type "one-way"
                        :departure-date ""
                        :return-date ""

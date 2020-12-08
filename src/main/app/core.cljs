@@ -1,11 +1,11 @@
 (ns app.core
   (:require
    ;; [app.components :as components]
-   [app.counter :refer [counter]]
-   [app.temperature :refer [temperature-converter]]
-   [app.flight :refer [flight-booker]]
-   [app.timer :refer [timer]]
-   [app.crud :refer [crud]]
+   [app.counter :as counter]
+   [app.temperature :as temperature]
+   [app.flight :as flight]
+   [app.timer :as timer]
+   [app.crud :as crud]
    [app.circles :as circles]
    [app.spreadsheet :as spreadsheet]
    [reagent.core :as r]
@@ -15,11 +15,11 @@
   (println "init!")
   (rd/render
    [:<>
-    [counter]
-    [temperature-converter]
-    [flight-booker]
-    [timer]
-    [crud]
+    [counter/main]
+    [temperature/main]
+    [flight/main]
+    [timer/main]
+    [crud/main]
     [circles/main]
     [spreadsheet/main]]
    (js/document.getElementById "app")))

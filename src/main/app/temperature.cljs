@@ -28,7 +28,7 @@
                                   (is-valid-fn v))
                                 (reset! valid false))))}])))
 
-(defn temperature-converter []
+(defn main []
   (let [celsius-input (r/atom 0)
         fahrenheit-input (r/atom (c->f @celsius-input))]
     (fn []

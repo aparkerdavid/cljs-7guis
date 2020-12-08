@@ -9,7 +9,7 @@
     :value @value
     :on-change (fn [e] (reset! value (-> e .-target .-value)))}])
 
-(defn timer []
+(defn main []
   (let [active (r/atom false)
         elapsed (r/atom 0)
         limit (r/atom 1000)

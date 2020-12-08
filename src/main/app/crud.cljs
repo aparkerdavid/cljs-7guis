@@ -12,7 +12,7 @@
    3 {:first "Jane"
       :last "Jacobs"}})
 
-(defn crud []
+(defn main []
   (let [names (r/atom sample-names)
         first-name-input (r/atom "")
         last-name-input (r/atom "")
