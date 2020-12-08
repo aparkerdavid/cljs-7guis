@@ -10,3 +10,43 @@ canvas {
   border: 2px solid black;
   /* width: 100%; */
 }
+
+.spreadsheet {
+  max-width: 800px;
+  max-height: 600px;
+  overflow: scroll;
+}
+
+table {
+  position: relative;
+  border: 1px solid #ddd;
+  border-collapse: collapse;
+}
+
+td,
+th {
+  white-space: nowrap;
+  border: 1px solid #ddd;
+  padding: 20px;
+  text-align: center;
+}
+
+th {
+  background-color: #eee;
+  position: -webkit-sticky;
+  position: sticky;
+  top: -1px;
+  z-index: 2;
+}
+th:first-of-type {
+  left: 0;
+  z-index: 3;
+}
+
+tbody tr td:first-of-type {
+  background-color: #eee;
+  position: -webkit-sticky;
+  position: sticky;
+  left: -1px;
+  text-align: left;
+}
