@@ -266,3 +266,15 @@ When the field is double-clicked, display an editable readout of the Cell's Form
 When editing:
 - press Enter to commit the Formula update.
 - press Escape or click elsewhere to cancel the edit.
+
+
+** Solving formulas
+
+Each node of a formula must be:
+- a Number
+- a Keyword
+- a Function
+  =+ - / * ** sqrt root=
+- a List
+
+We're not going to get into the finer points of Clojure parsing and validation (=eval= can handle that) we're just going to make sure all the tokens are OK with the subset of Clojure that we want to use.
