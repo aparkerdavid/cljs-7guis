@@ -12,7 +12,6 @@
    [reagent.dom :as rd]))
 
 (defn init []
-  (println "init!")
   (rd/render
    [:<>
     [counter/main]
