@@ -20,5 +20,3 @@ pom.xml.asc
 .hg/
 resources/public/main.css
 .calva/
-.calva/
-resources/public/main.css
