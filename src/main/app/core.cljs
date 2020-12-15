@@ -14,12 +14,19 @@
 (defn init []
   (println "init!")
   (rd/render
-   [:<>
-    [counter]
-    [temperature-converter]
-    [flight-booker]
-    [timer]
-    [crud]
-    [circles/main]
-    [spreadsheet/main]]
+
+   [:div
+    {:class ["flex" "justify-center"]}
+    [:div
+     {:class ["max-w-5xl" "flow"]}
+     [:h1
+      {:class ["text-6xl"]}
+      "7 GUIs"]
+     [counter]
+     [temperature-converter]
+     [flight-booker]
+     [timer]
+     [crud]
+     [circles/main]
+     [spreadsheet/main]]]
    (js/document.getElementById "app")))

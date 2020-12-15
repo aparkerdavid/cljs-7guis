@@ -195,7 +195,13 @@
         cell-formula (r/atom "")]
     (fn []
       [:input
-       {:value (if @editing @cell-formula @cell-value)
+       {:type "text"
+        :class ["w-24"]
+        :style {:position "relative"
+                :margin "-1px"}
+                ;; :z-index (if @editing "1" nil)
+
+        :value (if @editing @cell-formula @cell-value)
 
         :on-key-press
         (fn [e]
@@ -219,19 +225,26 @@
             (reset! cell-formula (-> e .-target .-value))))}])))
 
 (defn main []
-  [:div {:class "spreadsheet"}
+  [:div
+   {:class
+    ["max-w-3xl" "overflow-scroll"]}
+
    [:table
+    {:class "relative"}
     [:thead
      [:tr
-      [:td ""]
+      [:th ""]
       (for [letter cell-letters-range]
-        [:td {:key letter} letter])]]
+        [:th {:key letter :class ["sticky" "top-0" "z-20"]} letter])]]
     [:tbody
      (for [number cell-numbers-range]
        [:tr
         {:key number}
-        [:td number]
+        [:td
+         {:class ["sticky" "left-0" "z-10"]}
+         number]
         (for [letter cell-letters-range]
           [:td
-           {:key letter}
+           {:key letter
+            :class ["p-0"]}
            [cell-field state  (keyword (str letter number))]])])]]])

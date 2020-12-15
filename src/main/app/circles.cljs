@@ -104,7 +104,8 @@
     (if @editing-circle
       [:div
        [:input
-        {:type "range"
+        {:class ["block"]
+         :type "range"
          :min 10
          :max 200
          :value (:r @editing-circle)
@@ -112,25 +113,56 @@
          (fn [e]
            (let [v (-> e .-target .-value)]
              (swap! editing-circle #(assoc % :r v))))}]
+
        [:button
-        {:on-click
+        {:class ["hover:bg-red-600"
+                 "hover:border-red-600"
+                 "hover:text-white"
+                 "hover:shadow-xl"
+                 "active:bg-red-400"
+                 "active:border-red-400"
+                 "active:text-white"]
+         :on-click
+         (fn [e]
+           (reset! editing-circle nil))}
+        "Cancel"]
+
+       [:button
+        {:class ["hover:bg-green-600"
+                 "hover:border-green-600"
+                 "hover:text-white"
+                 "hover:shadow-xl"
+                 "active:bg-green-400"
+                 "active:border-green-400"
+                 "active:text-white"]
+         :on-click
          (fn [e]
            (let [{id :id r :r} @editing-circle]
              (resize-circle id r)
              (reset! editing-circle nil)))}
-        "Done"]
-       [:button
-        {:on-click
-         (fn [e]
-           (reset! editing-circle nil))}
-        "Cancel"]]
+        "Done"]]
       [:div
        [:button
-        {:on-click
+        {:class ["hover:bg-red-600"
+                 "hover:border-red-600"
+                 "hover:text-white"
+                 "hover:shadow-xl"
+                 "active:bg-red-400"
+                 "active:border-red-400"
+                 "active:text-white"]
+         :on-click
          undo}
         "Undo"]
        [:button
-        {:on-click
+        {:class ["hover:bg-blue-600"
+                 "hover:border-blue-600"
+                 "hover:text-white"
+                 "hover:shadow-xl"
+                 "active:bg-blue-400"
+                 "active:border-blue-400"
+                 "active:text-white"]
+
+         :on-click
          redo}
         "Redo"]])))
 
