@@ -1,10 +1,6 @@
 (ns app.spreadsheet
   (:require [reagent.core :as r]
-            [reagent.dom :as rdom]
-            [clojure.walk :refer [walk]]
-            [cljs.js :refer [empty-state eval js-eval]]
-            [cljs.env :refer [*compiler*]]
-            [cljs.tools.reader :refer [read-string]]
+            [cljs.js :refer [eval js-eval]]
             [cljs.reader :as reader]))
 
 (def cell-letters-range
