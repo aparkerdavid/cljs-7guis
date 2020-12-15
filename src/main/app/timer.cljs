@@ -4,7 +4,7 @@
 (defn limit-slider [value]
   [:input
    {:type "range"
-    :min "0"
+    :min "10"
     :max "1000"
     :value @value
     :on-change (fn [e] (reset! value (-> e .-target .-value)))}])
@@ -27,14 +27,31 @@
         {:type "range"
          :disabled true
          :min "0"
-         :max "100"
-         :value (* 100 (/ @elapsed @limit))}]
+         :max "1000"
+         :value (* 1000 (/ @elapsed @limit))}]
        [:div (str @elapsed " / " @limit)]
        [:div (/ @elapsed @limit)]
        [limit-slider limit]
-       [:button
-        {:on-click (fn [e] (swap! active not))}
-        (if @active "Stop" "Start")]
-       [:button
-        {:on-click (fn [e] (reset! elapsed 0))}
-        "Reset"]])))
+       [:div
+        [:button
+         {:class
+          (if @active
+            ["text-red-600"
+             "font-bold"
+             "border-red-600"
+             "hover:text-white"
+             "hover:bg-red-600"
+             "hover:shadow-xl"]
+            ["hover:text-white"
+             "hover:bg-green-600"
+             "hover:border-green-600"
+             "hover:shadow-xl"])
+          :on-click (fn [e] (swap! active not))}
+         (if @active "Stop" "Start")]
+        [:button
+         {:class ["hover:text-white"
+                  "hover:bg-blue-600"
+                  "hover:border-blue-600"
+                  "hover:shadow-xl"]
+          :on-click (fn [e] (reset! elapsed 0))}
+         "Reset"]]])))

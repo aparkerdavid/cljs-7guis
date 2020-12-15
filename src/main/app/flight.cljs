@@ -25,21 +25,30 @@
 (defn flight-date-input [{:keys [context value invalid-when complete-when disabled-when]}]
   (let [validity (r/atom :incomplete)]
     (fn []
-      [:input {:class
-               (cond
-                 (= @validity :invalid) "invalid"
-                 (= @validity :complete) "complete")
-               :disabled (when disabled-when
-                           (disabled-when @context))
-               :value (@context value)
-               :on-change (fn [e]
-                            (let [v (-> e .-target .-value)]
-                              (swap! context #(assoc % value v))
-                              (js/console.log (validate-date-str v))))}])))
+      [:input
+       {:type "text"
+        :class
+        (cond
+          (= @validity :invalid) "invalid"
+          (= @validity :complete) "complete")
+        :disabled (when disabled-when
+                    (disabled-when @context))
+        :value (@context value)
+        :on-change (fn [e]
+                     (let [v (-> e .-target .-value)]
+                       (swap! context #(assoc % value v))
+                       (js/console.log (validate-date-str v))))}])))
 
 (defn flight-submit-button [context]
   [:button
-   {:disabled (or
+   {:class ["hover:bg-green-600"
+            "hover:border-green-600"
+            "hover:text-white"
+            "hover:shadow-xl"
+            "active:bg-green-400"
+            "active:border-green-400"
+            "active:text-white"]
+    :disabled (or
                (-> @context :departure-date validate-date-str (not= :complete))
                (and
                 (-> @context :flight-type (= "round-trip"))
@@ -66,15 +75,21 @@
                        :message ""})]
     (fn []
       [:div
-       [flight-type-input state]
-       [flight-date-input {:context state
-                           :value :departure-date
-                           :invalid-when #(= (validate-date-str %) :invalid)
-                           :complete-when #(= (validate-date-str %) :complete)}]
-       [flight-date-input {:context state
-                           :value :return-date
-                           :invalid-when #(= (validate-date-str %) :invalid)
-                           :complete-when #(= (validate-date-str %) :complete)
-                           :disabled-when (fn [ctx] (= (:flight-type ctx) "one-way"))}]
-       [flight-submit-button state]
+       [:div
+        [flight-type-input state]]
+       [:div
+        [:div "Departure Date:"]
+        [flight-date-input {:context state
+                            :value :departure-date
+                            :invalid-when #(= (validate-date-str %) :invalid)
+                            :complete-when #(= (validate-date-str %) :complete)}]]
+       [:div
+        [:div "Arrival Date:"]
+        [flight-date-input {:context state
+                            :value :return-date
+                            :invalid-when #(= (validate-date-str %) :invalid)
+                            :complete-when #(= (validate-date-str %) :complete)
+                            :disabled-when (fn [ctx] (= (:flight-type ctx) "one-way"))}]]
+       [:div
+        [flight-submit-button state]]
        [:div (@state :message)]])))

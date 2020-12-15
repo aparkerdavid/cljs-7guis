@@ -14,6 +14,7 @@
   (let [valid (r/atom true)]
     (fn []
       [:input {:class (if @valid "valid" "invalid")
+               :type "text"
                :value @value
                ;; You shouldn't have to manually delete the whole contents of the input
                :on-click (fn [e]
@@ -33,7 +34,9 @@
         fahrenheit-input (r/atom (c->f @celsius-input))]
     (fn []
       [:div
-       [:div "Celsius: "
+       [:div
+        [:div "Celsius: "]
         [temperature-input celsius-input #(reset! fahrenheit-input (c->f %))]]
-       [:div "Fahrenheit: "
+       [:div
+        [:div "Fahrenheit: "]
         [temperature-input fahrenheit-input #(reset! celsius-input (f->c %))]]])))
