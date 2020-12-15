@@ -1,5 +1,6 @@
 node_modules/
 resources/public/js/
+resources/public/main.css
 
 /target
 /checkouts
@@ -18,6 +19,4 @@ pom.xml.asc
 
 .hgignore
 .hg/
-resources/public/main.css
-.calva/
 .calva/output-window/.clj-kondo/.cache/2020.12.12/lock
