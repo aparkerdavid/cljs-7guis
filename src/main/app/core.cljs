@@ -8,7 +8,6 @@
    [app.crud :as crud]
    [app.circles :as circles]
    [app.spreadsheet :as spreadsheet]
-   [reagent.core :as r]
    [reagent.dom :as rd]))
 
 (defn init []
