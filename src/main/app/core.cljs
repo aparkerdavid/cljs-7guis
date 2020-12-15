@@ -20,11 +20,11 @@
      [:h1
       {:class ["text-6xl"]}
       "7 GUIs"]
-     [counter]
-     [temperature-converter]
-     [flight-booker]
-     [timer]
-     [crud]
+     [counter/main]
+     [temperature/main]
+     [flight/main]
+     [timer/main]
+     [crud/main]
      [circles/main]
      [spreadsheet/main]]]
    (js/document.getElementById "app")))
