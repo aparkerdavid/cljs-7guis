@@ -12,11 +12,9 @@
 
 (defn init []
   (rd/render
-
    [:div
-    {:class ["flex" "justify-center"]}
     [:div
-     {:class ["max-w-5xl" "flow"]}
+     {:class ["flow"]}
      [:h1
       {:class ["text-6xl"]}
       "7 GUIs"]

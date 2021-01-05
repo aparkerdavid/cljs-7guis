@@ -13,7 +13,9 @@
 (defn temperature-input [value is-valid-fn]
   (let [valid (r/atom true)]
     (fn []
-      [:input {:class (if @valid "valid" "invalid")
+      [:input {:class
+               (concat ["w-full"]
+                       (if @valid "valid" "invalid"))
                :type "text"
                :value @value
                ;; You shouldn't have to manually delete the whole contents of the input
@@ -34,7 +36,10 @@
         fahrenheit-input (r/atom (c->f @celsius-input))]
     (fn []
       [:div
+       {:class ["max-w-xs"]}
        [:div
+        {:class
+         ["mb-4"]}
         [:div "Celsius: "]
         [temperature-input celsius-input #(reset! fahrenheit-input (c->f %))]]
        [:div

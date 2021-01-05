@@ -89,8 +89,8 @@
 
     (if
      (= (first current-selected-circle) (:id @editing-circle))
-      (draw-circle (assoc (last current-selected-circle) :r (:r @editing-circle)) "red")
-      (draw-circle (last current-selected-circle) "#666"))))
+     (draw-circle (assoc (last current-selected-circle) :r (:r @editing-circle)) "red")
+     (draw-circle (last current-selected-circle) "#666"))))
 
 (defn handle-right-click [e]
   (let [current-selected-circle (selected-circle (mouse-xy e))]
@@ -101,70 +101,55 @@
 
 (defn editor []
   (fn []
-    (if @editing-circle
-      [:div
-       [:input
-        {:class ["block"]
-         :type "range"
-         :min 10
-         :max 200
-         :value (:r @editing-circle)
-         :on-change
-         (fn [e]
-           (let [v (-> e .-target .-value)]
-             (swap! editing-circle #(assoc % :r v))))}]
+    [:div
+     {:class ["max-w-sm" "block" "m-auto" "p-4"]
+      :style {:margin "0 auto"}}
+     (if @editing-circle
+       [:div
+        [:div
+         {:class
+          ["max-w-min" "block" "m-auto"]}
+         [:div
+          "Edit circle radius:"]
+         [:input
+          {:type "range"
+           :min 10
+           :max 200
+           :value (:r @editing-circle)
+           :on-change
+           (fn [e]
+             (let [v (-> e .-target .-value)]
+               (swap! editing-circle #(assoc % :r v))))}]]
+        [:div
+         {:class ["flex" "flex-col" "gap-2" "sm:flex-row"]}
+         [:button
+          {:class ["btn-red" "w-full"]
+           :on-click
+           (fn [e]
+             (reset! editing-circle nil))}
+          "Cancel"]
 
-       [:button
-        {:class ["hover:bg-red-600"
-                 "hover:border-red-600"
-                 "hover:text-white"
-                 "hover:shadow-xl"
-                 "active:bg-red-400"
-                 "active:border-red-400"
-                 "active:text-white"]
-         :on-click
-         (fn [e]
-           (reset! editing-circle nil))}
-        "Cancel"]
+         [:button
+          {:class ["btn-green" "w-full"]
+           :on-click
+           (fn [e]
+             (let [{id :id r :r} @editing-circle]
+               (resize-circle id r)
+               (reset! editing-circle nil)))}
+          "Done"]]]
+       [:div
+        {:class ["flex" "flex-col" "gap-2" "sm:flex-row"]}
+        [:button
+         {:class ["btn-red" "w-full"]
+          :on-click
+          undo}
+         "Undo"]
+        [:button
+         {:class ["btn-blue" "w-full"]
 
-       [:button
-        {:class ["hover:bg-green-600"
-                 "hover:border-green-600"
-                 "hover:text-white"
-                 "hover:shadow-xl"
-                 "active:bg-green-400"
-                 "active:border-green-400"
-                 "active:text-white"]
-         :on-click
-         (fn [e]
-           (let [{id :id r :r} @editing-circle]
-             (resize-circle id r)
-             (reset! editing-circle nil)))}
-        "Done"]]
-      [:div
-       [:button
-        {:class ["hover:bg-red-600"
-                 "hover:border-red-600"
-                 "hover:text-white"
-                 "hover:shadow-xl"
-                 "active:bg-red-400"
-                 "active:border-red-400"
-                 "active:text-white"]
-         :on-click
-         undo}
-        "Undo"]
-       [:button
-        {:class ["hover:bg-blue-600"
-                 "hover:border-blue-600"
-                 "hover:text-white"
-                 "hover:shadow-xl"
-                 "active:bg-blue-400"
-                 "active:border-blue-400"
-                 "active:text-white"]
-
-         :on-click
-         redo}
-        "Redo"]])))
+          :on-click
+          redo}
+         "Redo"]])]))
 
 (defn ^:export main []
   (let [mouse-pos (r/atom [])
@@ -192,17 +177,21 @@
       :reagent-render
       (fn []
         [:div
-         [:canvas
-          {:id "circles-canvas"
-           :width 800
-           :height 600
-           :on-mouse-move
-           (fn [e]
-             (reset! mouse-pos (mouse-xy e)))
-           :on-context-menu
-           handle-right-click
-           :on-click
-           (fn [e]
-             (when (nil? @editing-circle)
-               (add-circle (mouse-xy e))))}]
+         {:class ["p-0" "max-w-min"]}
+         [:div
+          {:class ["overflow-scroll" "w-full"]}
+          [:canvas
+           {
+            :id "circles-canvas"
+            :width 800
+            :height 600
+            :on-mouse-move
+            (fn [e]
+              (reset! mouse-pos (mouse-xy e)))
+            :on-context-menu
+            handle-right-click
+            :on-click
+            (fn [e]
+              (when (nil? @editing-circle)
+                (add-circle (mouse-xy e))))}]]
          [editor]])})))

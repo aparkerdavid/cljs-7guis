@@ -15,12 +15,15 @@
         :invalid))))
 
 (defn flight-type-input [state]
-  [:select {:value (@state :flight-type)
-            :on-change
-            (fn [e]
-              (swap! state #(assoc % :flight-type (-> e .-target .-value))))}
-   [:option {:value "one-way"} "One-Way"]
-   [:option {:value "round-trip"} "Round-Trip"]])
+  [:div
+   {:class ["dropdown" "w-full"]}
+   [:select {:class ["w-full"]
+             :value (@state :flight-type)
+             :on-change
+             (fn [e]
+               (swap! state #(assoc % :flight-type (-> e .-target .-value))))}
+    [:option {:value "one-way"} "One-Way"]
+    [:option {:value "round-trip"} "Round-Trip"]]])
 
 (defn flight-date-input [{:keys [context value invalid-when complete-when disabled-when]}]
   (let [validity (r/atom :incomplete)]
@@ -28,26 +31,21 @@
       [:input
        {:type "text"
         :class
-        (cond
-          (= @validity :invalid) "invalid"
-          (= @validity :complete) "complete")
+        (concat ["w-full"]
+                (cond
+                  (= @validity :invalid) ["invalid"]
+                  (= @validity :complete) ["complete"]))
         :disabled (when disabled-when
                     (disabled-when @context))
         :value (@context value)
         :on-change (fn [e]
                      (let [v (-> e .-target .-value)]
                        (swap! context #(assoc % value v))
-                       (js/console.log (validate-date-str v))))}])))
+                       (reset! validity (validate-date-str v))))}])))
 
 (defn flight-submit-button [context]
   [:button
-   {:class ["hover:bg-green-600"
-            "hover:border-green-600"
-            "hover:text-white"
-            "hover:shadow-xl"
-            "active:bg-green-400"
-            "active:border-green-400"
-            "active:text-white"]
+   {:class ["btn-green" "w-full"]
     :disabled (or
                (-> @context :departure-date validate-date-str (not= :complete))
                (and
@@ -66,7 +64,7 @@
                 (when
                  (-> @context :flight-type (= "round-trip"))
                   (str ", returning on " (@context :return-date)))))))}
-   "Submit"])
+   "Book!"])
 
 (defn main []
   (let [state (r/atom {:flight-type "one-way"
@@ -75,21 +73,37 @@
                        :message ""})]
     (fn []
       [:div
+       {:class ["max-w-xs"]}
        [:div
+        {:class
+         ["mb-4"]}
+        [:div "Flight Type:"]
         [flight-type-input state]]
+
        [:div
+        {:class
+         ["mb-4"]}
         [:div "Departure Date:"]
         [flight-date-input {:context state
                             :value :departure-date
                             :invalid-when #(= (validate-date-str %) :invalid)
                             :complete-when #(= (validate-date-str %) :complete)}]]
+
        [:div
+        {:class
+         ["mb-4"]}
         [:div "Arrival Date:"]
         [flight-date-input {:context state
                             :value :return-date
                             :invalid-when #(= (validate-date-str %) :invalid)
                             :complete-when #(= (validate-date-str %) :complete)
                             :disabled-when (fn [ctx] (= (:flight-type ctx) "one-way"))}]]
+
        [:div
+        {:class
+         ["mb-4"]}
         [flight-submit-button state]]
-       [:div (@state :message)]])))
+       (when ((complement string/blank?) (@state :message))
+         [:div
+          {:class ["bg-green-100" "border-2" "border-green-600" "p-1"]}
+          (@state :message)])])))

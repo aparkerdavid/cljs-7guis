@@ -6,10 +6,11 @@ module.exports = {
   },
   variants: {
     outline: ["focus"],
+    borderColor: ["focus", "hover"],
     extend: {
-      backgroundColor: ["active"],
+      backgroundColor: ["active", "odd"],
       borderColor: ["active"],
     },
   },
   plugins: [],
-}
+};

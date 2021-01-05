@@ -15,10 +15,6 @@
               number cell-numbers-range]
           (keyword (str letter number)))))
 
-(defn cell-keyword?
-  [item]
-  (-> item))
-
 (defonce
   state
   (r/atom
@@ -222,25 +218,42 @@
 
 (defn main []
   [:div
-   {:class
-    ["max-w-3xl" "overflow-scroll"]}
+   {:class ["p-0" "h-screen"]}
 
-   [:table
-    {:class "relative"}
-    [:thead
-     [:tr
-      [:th ""]
-      (for [letter cell-letters-range]
-        [:th {:key letter :class ["sticky" "top-0" "z-20"]} letter])]]
-    [:tbody
-     (for [number cell-numbers-range]
-       [:tr
-        {:key number}
-        [:td
-         {:class ["sticky" "left-0" "z-10"]}
-         number]
-        (for [letter cell-letters-range]
-          [:td
-           {:key letter
-            :class ["p-0"]}
-           [cell-field state  (keyword (str letter number))]])])]]])
+   [:div
+    {:class ["overflow-scroll" "h-screen" "w-screen"]
+     }
+    [:table
+     {:class "relative"}
+     [:thead
+      [:tr
+       [:th
+        {:class [
+                 "sticky"
+                 "top-0"
+                 "z-20"]}
+        [:div
+         {:class ["border-2" "border-gray-600" "bg-gray-100" "h-10" "w-24"]
+          :style {:margin "-2px"}}
+         ""]]
+       (for [letter cell-letters-range]
+         [:th {:key letter
+               :class ["sticky" "top-0" "z-20"]}
+          [:div {:class
+                 ["border-2" "border-gray-600" "bg-gray-100" "h-10" "w-24" "p-1" "uppercase"]
+                 :style {:margin "-2px"}} letter]])]]
+     [:tbody
+      (for [number cell-numbers-range]
+        [:tr
+         {:key number}
+         [:td
+          {:class ["sticky" "left-0" "z-10"]}
+          [:div
+           {:class ["align-middle" "border-2" "border-gray-600" "bg-gray-100" "p-1" "h-10" "w-24" "text-center"]
+            :style {:margin "-2px"}}
+           number]]
+         (for [letter cell-letters-range]
+           [:td
+            {:key letter
+             :class ["p-0"]}
+            [cell-field state  (keyword (str letter number))]])])]]]])

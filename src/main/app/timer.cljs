@@ -3,7 +3,8 @@
 
 (defn limit-slider [value]
   [:input
-   {:type "range"
+   {:class ["w-full"]
+    :type "range"
     :min "10"
     :max "1000"
     :value @value
@@ -23,8 +24,10 @@
                     (swap! elapsed inc)))]
     (fn []
       [:div
+       {:class ["max-w-xs"]}
        [:input
-        {:type "range"
+        {:class ["w-full"]
+         :type "range"
          :disabled true
          :min "0"
          :max "1000"
@@ -35,23 +38,20 @@
        [:div
         [:button
          {:class
-          (if @active
-            ["text-red-600"
-             "font-bold"
-             "border-red-600"
-             "hover:text-white"
-             "hover:bg-red-600"
-             "hover:shadow-xl"]
-            ["hover:text-white"
-             "hover:bg-green-600"
-             "hover:border-green-600"
-             "hover:shadow-xl"])
+          (concat
+           ["w-full"
+            "mb-4"]
+           (if @active
+             ["btn-red"
+              "text-red-600"
+              "font-bold"
+              "border-red-600"]
+             ["btn-green"]))
           :on-click (fn [e] (swap! active not))}
          (if @active "Stop" "Start")]
         [:button
-         {:class ["hover:text-white"
-                  "hover:bg-blue-600"
-                  "hover:border-blue-600"
-                  "hover:shadow-xl"]
+         {:class
+          ["w-full"
+           "btn-blue"]
           :on-click (fn [e] (reset! elapsed 0))}
          "Reset"]]])))

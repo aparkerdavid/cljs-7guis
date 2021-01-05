@@ -12,12 +12,13 @@
    {:first "Jane"
     :last "Jacobs"}])
 
-(defonce state (r/atom
-                {:names sample-names
-                 :filter-str ""
-                 :selected-id 0
-                 :first-name-input ""
-                 :last-name-input ""}))
+(defonce state
+  (r/atom
+   {:names sample-names
+    :filter-str ""
+    :selected-id 0
+    :first-name-input ""
+    :last-name-input ""}))
 
 (defn get-filtered-names
   "Return a list of vectors: each contains an index and the name associated with it.
@@ -83,45 +84,60 @@
    (fn [id] (if (> id 0) (dec id) 0)))
   (reset-name-inputs! state))
 
-
 (defn main []
   (fn []
-    [:div ;; Outermost container
+    [:div
+     {:class ["max-w-xs" "sm:max-w-lg"]} ;; Outermost container
      [:div ;; Top block
-      {:class ["flex" "row"]}
+      {:class ["w-full"
+               ;; "bg-red-100"
+               "flex"
+               "flex-col"
+               "md:flex-row"
+               "justify-evenly"
+               "gap-2"
+               "mb-4"]}
       [:div ;; Filter and Namelist
 
+
        [:div ;; Filter
+        {:class ["mb-4"]}
         [:div "Filter: "]
         [:input
-         {:type "text"
+         {:class ["w-full" "sm:w-auto"]
+          :type "text"
           :value (@state :filter-str)
           :on-change (fn [e] (reset! (r/cursor state [:filter-str]) (-> e .-target .-value)))}]]
 
        [:ul ;; Namelist
         {:class ["border-gray-900"
                  "border-2"
-                 "h-72"
+                 "h-48"
                  "overflow-scroll"]}
-        (for [[key name] (get-filtered-names state)]
-          [:li
-           {:class (concat ["px-1"]
-                           (when
-                            (= (@state :selected-id) key)
-                             ["bg-blue-600" "text-white"]))
-            :on-click (fn [_e]
-                        (reset! (r/cursor state [:selected-id]) key)
-                        (reset-name-inputs! state))
-            :key key}
-           [:a
-            (str (name :first) " " (name :last))]])]]
+        (doall
+         (for [[key name] (get-filtered-names state)]
+           [:li
+            {:class (concat
+                     ["px-1"]
+                     (when
+                      (= (@state :selected-id) key)
+                       ["bg-blue-600" "text-white"]))
+             :on-click (fn [_e]
+                         (reset! (r/cursor state [:selected-id]) key)
+                         (reset-name-inputs! state))
+             :key key}
+            [:a
+             (str (name :first) " " (name :last))]]))]]
 
-      [:div
+      [:div ;; First and Last Name Fields
+
        [:div
+        {:class ["mb-4"]}
         [:div
          "First name:"]
         [:input
-         {:type "text"
+         {:class ["w-full"]
+          :type "text"
           :value (@state :first-name-input)
           :on-change
           (fn [e] (reset! (r/cursor state [:first-name-input]) (-> e .-target .-value)))}]]
@@ -129,41 +145,34 @@
        [:div
         [:div "Last name: "]
         [:input
-         {:type "text"
+         {:class ["w-full"]
+          :type "text"
           :value (@state :last-name-input)
-          :on-change (fn [e] (reset! (r/cursor state [:last-name-input]) (-> e .-target .-value)))}]]]]
+          :on-change
+          (fn [e] (reset! (r/cursor state [:last-name-input]) (-> e .-target .-value)))}]]]]
 
-     [:div
-
+     [:div ;; Buttons block
+      {:class ["w-full"
+               "flex"
+               "flex-col"
+               "sm:flex-row"
+               "gap-2"]}
       [:button
-       {:class ["hover:bg-green-600"
-                "hover:border-green-600"
-                "hover:text-white"
-                "hover:shadow-xl"
-                "active:bg-green-400"
-                "active:border-green-400"
-                "active:text-white"]
+       {:class ["w-full"
+                "btn-green"]
+
         :on-click #(create! state)}
        "Create"]
 
       [:button
-       {:class ["hover:bg-blue-600"
-                "hover:border-blue-600"
-                "hover:text-white"
-                "hover:shadow-xl"
-                "active:bg-blue-400"
-                "active:border-blue-400"
-                "active:text-white"]
+       {:class ["w-full"
+                "btn-blue"]
+
         :on-click #(update! state)}
        "Update"]
 
       [:button
-       {:class ["hover:bg-red-600"
-                "hover:border-red-600"
-                "hover:text-white"
-                "hover:shadow-xl"
-                "active:bg-red-400"
-                "active:border-red-400"
-                "active:text-white"]
+       {:class ["w-full"
+                "btn-red"]
         :on-click #(delete! state)}
        "Delete"]]]))

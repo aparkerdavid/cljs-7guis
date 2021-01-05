@@ -1,8 +1,12 @@
 @tailwind base;
 @tailwind components;
 
+select::-ms-expand {
+  display: none;
+}
+
 .flow > * + * {
-  @apply border-2 border-gray-100 mt-16 p-8;
+  @apply border-2 border-gray-900 mt-16 p-8 mx-auto;
 }
 
 input {
@@ -24,6 +28,14 @@ input[type="text"]:focus {
   z-index: 1;
 }
 
+input[type="text"].invalid {
+  @apply border-red-600;
+}
+
+input[type="text"].complete {
+  @apply border-green-600;
+}
+
 input:disabled {
   @apply border-gray-300 bg-gray-100;
 }
@@ -39,15 +51,63 @@ button {
   @apply transition
   duration-150
   ease-in-out
-  border-2
   border-gray-900
-  px-4 py-1
+  border-2
   text-xl
   h-10
   w-32;
 }
 
 button:focus {
+  @apply outline-none;
+}
+
+.btn-red:hover {
+  @apply bg-red-600 border-red-600 text-white shadow-xl;
+}
+.btn-red:active {
+  @apply bg-red-400 border-red-400 text-white;
+}
+
+.btn-green:hover {
+  @apply bg-green-600 border-green-600 text-white shadow-xl;
+}
+.btn-green:active {
+  @apply bg-green-400 border-green-400 text-white;
+}
+
+.btn-blue:hover {
+  @apply bg-blue-600 border-blue-600 text-white shadow-xl;
+}
+.btn-blue:active {
+  @apply bg-blue-400 border-blue-400 text-white;
+}
+
+select {
+  @apply appearance-none bg-white;
+}
+
+.dropdown {
+  display: flex;
+  align-items: center;
+  @apply border-2
+  appearance-none
+  rounded-none
+  border-gray-900
+  px-2 py-1
+  h-10;
+}
+
+.dropdown::after {
+  content: "";
+  width: 0.8em;
+  height: 0.5em;
+  background-color: black;
+  clip-path: polygon(100% 0%, 0 0%, 50% 100%);
+  justify-self: end;
+}
+
+select:focus {
   @apply outline-none;
 }
 
