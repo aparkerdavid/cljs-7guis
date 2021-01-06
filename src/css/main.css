@@ -1,6 +1,10 @@
 @tailwind base;
 @tailwind components;
 
+::selection {
+  @apply bg-blue-600 text-white;
+}
+
 select::-ms-expand {
   display: none;
 }
@@ -24,16 +28,16 @@ input {
 }
 
 input[type="text"]:focus {
-  @apply outline-none border-4 border-blue-600 shadow-xl;
+  @apply outline-none bg-blue-100 border-blue-600 shadow-xl;
   z-index: 1;
 }
 
 input[type="text"].invalid {
-  @apply border-red-600;
+  @apply border-red-600 bg-red-100;
 }
 
 input[type="text"].complete {
-  @apply border-green-600;
+  @apply border-green-600 bg-green-100;
 }
 
 input:disabled {
