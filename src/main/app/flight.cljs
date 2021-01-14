@@ -1,6 +1,5 @@
 (ns app.flight
-  (:require [reagent.core :as r]
-            [clojure.string :as string]))
+  (:require [reagent.core :as r]))
 
 (defonce state (r/atom {:flight-type "one-way"
                         :departure-date ""
@@ -82,7 +81,7 @@
                  (-> @state :return-date validate-date-str (not= :complete))
                  (> (-> @state :departure-date js/Date.) (-> @state :return-date js/Date.)))))
     :on-click
-    (fn [e]
+    (fn [_e]
       (reset! (r/cursor state [:message])
               (success-message
                (@state :departure-date)
