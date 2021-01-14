@@ -52,7 +52,7 @@
     [:option {:value "one-way"} "One-Way"]
     [:option {:value "round-trip"} "Round-Trip"]]])
 
-(defn flight-date-input [{:keys [state value invalid-when complete-when disabled-when]}]
+(defn flight-date-input [{:keys [state value disabled-when]}]
   (let [validity (r/atom :incomplete)]
     (fn []
       [:input
