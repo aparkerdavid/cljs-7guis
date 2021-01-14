@@ -119,8 +119,7 @@
            [:li
             {:class (concat
                      ["px-1"]
-                     (when
-                      (= (@state :selected-id) key)
+                     (when (= (@state :selected-id) key)
                        ["bg-blue-600" "text-white"]))
              :on-click (fn [_e]
                          (reset! (r/cursor state [:selected-id]) key)
