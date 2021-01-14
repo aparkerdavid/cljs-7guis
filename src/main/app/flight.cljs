@@ -20,9 +20,8 @@
       (some js/Number.isNaN [(.getMonth js-date) (.getDay js-date) (.getYear js-date)])
       :invalid
       (re-matches #"^[0-9]{4}-[0-9]{2}-[0-9]{2}$" s)
-      (if
-       (= s
-          (subs (.toISOString js-date) 0 10))
+      (if (= s
+             (subs (.toISOString js-date) 0 10))
         :complete
         :invalid))))
 
@@ -37,11 +36,11 @@
     {:class ["font-bold" "italic" "mb-1"]}
     "Flight booked!"]
    [:p
-     "Your flight leaves on " [:span.whitespace-nowrap departure-date] "."]
+    "Your flight leaves on " [:span.whitespace-nowrap departure-date] "."]
    (when (some? return-date)
      [:p
       {:class ["mt-1"]}
-       "Your return flight leaves on " [:span.whitespace-nowrap return-date] "."])])
+      "Your return flight leaves on " [:span.whitespace-nowrap return-date] "."])])
 
 (defn flight-type-input [state]
   [:div
@@ -86,13 +85,10 @@
     (fn [e]
       (reset! (r/cursor state [:message])
               (success-message
-                (@state :departure-date)
-                (when
-                    (= (@state :flight-type) "round-trip")
-                  (@state :return-date)))))}
+               (@state :departure-date)
+               (when (= (@state :flight-type) "round-trip")
+                 (@state :return-date)))))}
    "Book!"])
-
-
 
 (defn main []
   [:div
