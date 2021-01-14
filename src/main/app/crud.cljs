@@ -2,19 +2,16 @@
   (:require [reagent.core :as r]
             [clojure.string :as string]))
 
-(def sample-names
-  [{:first "Lebbeus"
-    :last "Woods"}
-   {:first "Bruce"
-    :last "Mau"}
-   {:first "Christopher"
-    :last "Alexander"}
-   {:first "Jane"
-    :last "Jacobs"}])
-
 (defonce state
   (r/atom
-   {:names sample-names
+   {:names [{:first "Lebbeus"
+             :last "Woods"}
+            {:first "Bruce"
+             :last "Mau"}
+            {:first "Christopher"
+             :last "Alexander"}
+            {:first "Jane"
+             :last "Jacobs"}]
     :filter-str ""
     :selected-id 0
     :first-name-input ""
