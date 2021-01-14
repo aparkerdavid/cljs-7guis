@@ -19,7 +19,7 @@
 
 (defn get-filtered-names
   "Return a list of vectors: each contains an index and the name associated with it.
-   Names will be filtered by 'state's :filter-str field.
+   Names will be filtered by the content of 'state's :filter-str field.
    Only those names whose :last field starts with the filter-str will be included.
    If the filter-str is empty, no filtration will occur; the full list of names will be returned."
   [state]
