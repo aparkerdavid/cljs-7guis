@@ -30,7 +30,7 @@
        (map-indexed
         (fn [idx name] [idx name]))
        (filter
-        (fn [[id name]]
+        (fn [[_id name]]
           (if (string/blank? (@state :filter-str))
             true
             (string/starts-with?
