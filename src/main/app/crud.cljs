@@ -86,11 +86,10 @@
 
 (defn main []
   (fn []
-    [:div
-     {:class ["max-w-xs" "sm:max-w-lg"]} ;; Outermost container
+    [:div ;; Outermost container
+     {:class ["max-w-xs" "sm:max-w-lg"]}
      [:div ;; Top block
       {:class ["w-full"
-               ;; "bg-red-100"
                "flex"
                "flex-col"
                "md:flex-row"
