@@ -156,17 +156,16 @@
                "flex-col"
                "sm:flex-row"
                "gap-2"]}
+
       [:button
        {:class ["w-full"
                 "btn-green"]
-
         :on-click #(create! state)}
        "Create"]
 
       [:button
        {:class ["w-full"
                 "btn-blue"]
-
         :on-click #(update! state)}
        "Update"]
 
