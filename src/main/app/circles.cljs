@@ -12,6 +12,16 @@
                  :editing-circle nil}))
 
 
+(defn reset-mouse-pos!
+  "Update the application state with the current location of the mouse pointer.
+   Called on every mouse-move event within the canvas."
+  [e]
+  (let [rect (.getBoundingClientRect (.-target e))]
+    (reset! (r/cursor state [:mouse-pos])
+            [(- (.-clientX e) (.-left rect))
+             (- (.-clientY e) (.-top rect))])))
+
+
 (defn create-circle
   [state x y]
   (-> state
@@ -219,6 +229,7 @@
          {:id "circles-canvas"
           :width 800
           :height 600
+
           :on-mouse-move
           (fn [e]
             (reset! (r/cursor state [:mouse-pos]) (mouse-xy e)))
