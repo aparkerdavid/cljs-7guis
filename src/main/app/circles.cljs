@@ -23,6 +23,8 @@
 
 
 (defn create-circle
+  "Add a circle  at the specified X and Y coordinates.
+   This  adds a delete op to the undo queue and clears the redo queue."
   [state x y]
   (-> state
       (update :circles #(conj % {:x x :y y :r 50}))
@@ -31,6 +33,7 @@
 
 
 (defn create-circle-at-mouse
+  "Create a circle at the current location of the mouse pointer."
   [state]
   (create-circle
    state
@@ -39,6 +42,7 @@
 
 
 (defn distance [x1 y1 x2 y2]
+  "Get the distance between two points."
   (js/Math.sqrt
    (+
     (js/Math.pow (- x1 x2) 2)
@@ -46,6 +50,8 @@
 
 
 (defn get-circle-at-mouse
+  "Determine which circle the mouse pointer is currently inside.
+   If the pointer is inside multiple circles, get the one whose center the pointer is closest to."
   [state]
   (let [[mouse-x mouse-y] (:mouse-pos state)
         get-distance (fn [{circle-x :x circle-y :y}]
@@ -67,13 +73,9 @@
          first)))
 
 
-(defn edit-circle-at-mouse
-  [state]
-  (when-let [circle (get-circle-at-mouse state)]
-    (assoc state :editing-circle circle)))
-
-
 (defn resize-circle
+  "Change the radius of a given circle.
+   This adds a resize op to the undo queue and clears the redo queue."
   [state idx r]
   (let [old-r (-> state :circles (nth idx) :r)]
     (-> state
@@ -82,12 +84,22 @@
         (assoc :redo-queue []))))
 
 
+(defn edit-circle-at-mouse
+  "Begin editing the circle the mouse pointer is currently inside.
+   This does not actually change the circle, but allows for a prospective change to be previewed."
+  [state]
+  (when-let [circle (get-circle-at-mouse state)]
+    (assoc state :editing-circle circle)))
+
+
 (defn edit-circle-stop
+  "If editing a circle, stop."
   [state]
   (assoc state :editing-circle nil))
 
 
 (defn edit-circle-commit
+  "If editing a circle, commit the change and stop editing"
   [state]
   (let [idx (-> state :editing-circle :idx)
         r (-> state :editing-circle :r)]
@@ -97,6 +109,8 @@
 
 
 (defn undo
+  "Perform an operation determined by the last operation in the undo queue.
+   This removes the last item from the undo queue, add a corresponding item to the redo queue."
   [state]
   (when-let [op (last (:undo-queue state))]
     (if (= op :delete-last)
@@ -112,6 +126,8 @@
 
 
 (defn redo
+  "Perform an operation determined by the last operation in the redo queue.
+   This removes the last item from the redo queue, add a corresponding item to the undo queue."
   [state]
   (when-let [op (-> state :redo-queue last)]
     (if (:x op) ;; A Create op will have an :x key, a Resize op will not.
@@ -119,13 +135,8 @@
       (resize-circle state (:idx op) (:r op)))))
 
 
-(defn mouse-xy [e]
-  (let [rect (.getBoundingClientRect (.-target e))]
-    [(- (.-clientX e) (.-left rect))
-     (- (.-clientY e) (.-top rect))]))
-
-
 (defn draw-circle! [{x :x y :y r :r} color]
+  "Draw a circle to the canvas with the specified geometry and color."
   (let [ctx (.getContext (@state :canvas) "2d")]
     (set! (. ctx -fillStyle) color)
     (.moveTo ctx x y)
@@ -136,6 +147,11 @@
 
 
 (defn redraw!
+  "Primary drawing function. This fires every time the application state changes.
+   Fill the background with #eee.
+   Draw each circle in white.
+   If a circle is being edited, redraw it in red.
+   If the cursor is inside a circle other than the one being edited, redraw it in #666"
   []
   (let [ctx (-> @state :canvas (.getContext "2d"))
         circle-at-mouse (get-circle-at-mouse @state)
