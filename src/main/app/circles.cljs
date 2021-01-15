@@ -134,8 +134,9 @@
       (resize-circle state (:idx op) (:r op)))))
 
 
-(defn draw-circle! [{x :x y :y r :r} color]
+(defn draw-circle!
   "Draw a circle to the canvas with the specified geometry and color."
+  [{x :x y :y r :r} color]
   (let [ctx (.getContext (@state :canvas) "2d")]
     (set! (. ctx -fillStyle) color)
     (.moveTo ctx x y)
