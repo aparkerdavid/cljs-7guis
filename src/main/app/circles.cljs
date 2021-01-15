@@ -43,9 +43,8 @@
   "Get the distance between two points."
   [x1 y1 x2 y2]
   (js/Math.sqrt
-   (+
-    (js/Math.pow (- x1 x2) 2)
-    (js/Math.pow (- y1 y2) 2))))
+   (+ (js/Math.pow (- x1 x2) 2)
+      (js/Math.pow (- y1 y2) 2))))
 
 
 (defn get-circle-at-mouse
@@ -64,8 +63,7 @@
              {:idx idx
               :distance (get-distance circle)})))
          (filter
-          (fn
-            [{r :r dist :distance}]
+          (fn [{r :r dist :distance}]
             (< dist r)))
          (sort-by
           #(:distance %))
@@ -119,7 +117,7 @@
           (update :undo-queue pop)
           (update :redo-queue #(conj % (-> state :circles last (dissoc :r))))
           (update :circles pop))
-      (:r op)
+      (:r op) ;; A Resize op will have an :r key
       (let [{idx :idx r :r} (-> state :undo-queue last)]
         (-> state
             (update :undo-queue pop)
