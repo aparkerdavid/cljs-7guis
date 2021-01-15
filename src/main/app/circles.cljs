@@ -154,9 +154,11 @@
 (defn redraw!
   "Primary drawing function. This fires every time the application state changes.
    Fill the background with #eee.
-   Draw each circle in white.
-   If a circle is being edited, redraw it in red.
-   If the cursor is inside a circle other than the one being edited, redraw it in #666"
+   Draw each circle in white, unless it is being edited.
+   In that case, replace it with a preview of the prospective change.
+   Circles are drawn in stacking order.
+   If the cursor is inside a circle other than the one being edited, redraw it in #666
+   If the cursor is in side the circle being edited, redraw it in red."
   []
   (let [ctx (-> @state :canvas (.getContext "2d"))
         circle-at-mouse (get-circle-at-mouse @state)
@@ -165,11 +167,15 @@
     (.fillRect ctx 0 0 800 600)
     (->> @state
          :circles
-         (map #(draw-circle! % "white"))
+         (map-indexed
+          (fn [idx circle]
+            (if (= idx (:idx editing-circle))
+              (draw-circle! editing-circle "red")
+              (draw-circle! circle "white"))))
          doall)
-    (draw-circle! editing-circle "red")
-    (when (not= (:idx circle-at-mouse) (:idx editing-circle))
-      (draw-circle! circle-at-mouse "#666"))))
+    (if (= (:idx circle-at-mouse) (:idx editing-circle))
+      (draw-circle! editing-circle "red")
+      (draw-circle! circle-at-mouse "#bbb"))))
 
 
 (defn editor []
