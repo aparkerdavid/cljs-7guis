@@ -225,16 +225,9 @@
     (fn [this]
       (add-watch state :component-update-state #(r/force-update this))
       (reset! (r/cursor state [:canvas]) (. (rdom/dom-node this) querySelector "#circles-canvas")))
-      ;; (let [ctx (.getContext @canvas "2d")]
-      ;;   (set! (. ctx -fillStyle) "#eee")
-      ;;   (.fillRect ctx 0 0 800 600)))
-      ;; (add-watch circles :component-update-circles #(r/force-update this))
-      ;; (add-watch mouse-pos :component-update-mouse-pos #(r/force-update this))
-      ;; (add-watch editing-circle :component-update-editing-circle #(r/force-update this)))
 
     :component-did-update
-    (fn [this]
-      (redraw!))
+    #(redraw!)
 
     :reagent-render
     (fn []
