@@ -1,4 +1,4 @@
-(ns app.temperature
+(ns app.temperature-converter
   (:require [reagent.core :as r]))
 
 (defn f->c [f]
@@ -31,7 +31,7 @@
                                   (is-valid-fn v))
                                 (reset! valid false))))}])))
 
-(defn main []
+(defn temperature-converter []
   (let [celsius-input (r/atom 0)
         fahrenheit-input (r/atom (c->f @celsius-input))]
     (fn []

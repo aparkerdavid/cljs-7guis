@@ -1,4 +1,4 @@
-(ns app.flight
+(ns app.flight-booker
   (:require [reagent.core :as r]))
 
 (defonce state (r/atom {:flight-type "one-way"
@@ -89,7 +89,7 @@
                  (@state :return-date)))))}
    "Book!"])
 
-(defn main []
+(defn flight-booker []
   [:div
    {:class ["max-w-xs"]}
    [:div

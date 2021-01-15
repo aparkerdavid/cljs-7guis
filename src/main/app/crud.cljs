@@ -89,7 +89,7 @@
       (reset-name-inputs)))
 
 
-(defn main []
+(defn crud []
   (fn []
     [:div ;; Outermost container
      {:class ["max-w-xs" "sm:max-w-lg"]}

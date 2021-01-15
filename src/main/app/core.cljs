@@ -1,13 +1,12 @@
 (ns app.core
   (:require
-   ;; [app.components :as components]
-   [app.counter :as counter]
-   [app.temperature :as temperature]
-   [app.flight :as flight]
-   [app.timer :as timer]
-   [app.crud :as crud]
-   [app.circles :as circles]
-   [app.spreadsheet :as spreadsheet]
+   [app.counter :refer [counter]]
+   [app.temperature-converter :refer [temperature-converter]]
+   [app.flight-booker :refer [flight-booker]]
+   [app.timer :refer [timer]]
+   [app.crud :refer [crud]]
+   [app.circles :refer [circles]]
+   [app.spreadsheet :refer [spreadsheet]]
    [reagent.dom :as rd]))
 
 (defn init []
@@ -18,11 +17,11 @@
      [:h1
       {:class ["text-6xl"]}
       "7 GUIs"]
-     [counter/main]
-     [temperature/main]
-     [flight/main]
-     [timer/main]
-     [crud/main]
-     [circles/main]
-     [spreadsheet/main]]]
+     [counter]
+     [temperature-converter]
+     [flight-booker]
+     [timer]
+     [crud]
+     [circles]
+     [spreadsheet]]]
    (js/document.getElementById "app")))

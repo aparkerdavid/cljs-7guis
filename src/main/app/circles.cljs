@@ -221,7 +221,7 @@
            "Redo"]])])))
 
 
-(defn main []
+(defn circles []
   (r/create-class
    {:display-name "circles"
 

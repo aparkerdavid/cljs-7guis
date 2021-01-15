@@ -216,20 +216,18 @@
           (when @editing
             (reset! cell-formula (-> e .-target .-value))))}])))
 
-(defn main []
+(defn spreadsheet []
   [:div
    {:class ["p-0" "h-screen"]}
 
    [:div
-    {:class ["overflow-scroll" "h-screen" "w-screen"]
-     }
+    {:class ["overflow-scroll" "h-screen" "w-screen"]}
     [:table
      {:class "relative"}
      [:thead
       [:tr
        [:th
-        {:class [
-                 "sticky"
+        {:class ["sticky"
                  "top-0"
                  "z-20"]}
         [:div

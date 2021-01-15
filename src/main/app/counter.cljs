@@ -1,7 +1,7 @@
 (ns app.counter
   (:require [reagent.core :as r]))
 
-(defn main []
+(defn counter []
   (let [cnt (r/atom 0)]
     (fn []
       [:div
