@@ -23,41 +23,50 @@
    Only those names whose :last field starts with the filter-str will be included.
    If the filter-str is empty, no filtration will occur; the full list of names will be returned."
   [state]
-  (->> (@state :names)
+  (->> (state :names)
        (map-indexed
         (fn [idx name] [idx name]))
        (filter
         (fn [[_id name]]
-          (if (string/blank? (@state :filter-str))
+          (if (string/blank? (state :filter-str))
             true
             (string/starts-with?
              (string/lower-case (name :last))
-             (string/lower-case (@state :filter-str))))))))
+             (string/lower-case (state :filter-str))))))))
 
-(defn reset-name-inputs!
+
+(defn reset-name-inputs
   "Reset the values of 'state's 'first-name-input' and 'last-name-input' fields.
    The new values will be those associated with the currently selected name.
    This should happen every time the user changes which name is selected."
   [state]
-  (reset! (r/cursor state [:first-name-input]) (deref (r/cursor state [:names (@state :selected-id) :first])))
-  (reset! (r/cursor state [:last-name-input]) (deref (r/cursor state [:names (@state :selected-id) :last]))))
+  (let [selected-id (:selected-id state)
+        selected-first (-> state :names (nth selected-id) :first)
+        selected-last (-> state :names (nth selected-id) :last)]
+    (assoc state
+           :first-name-input selected-first
+           :last-name-input selected-last)))
 
-(defn create!
+
+(defn create
   "Add a record to the list.
    The first and last names will be the values of 'first-name-input' and 'last-name-input'."
   [state]
-  (swap!
-   (r/cursor state [:names])
-   #(conj % {:first (@state :first-name-input) :last (@state :last-name-input)})))
+  (update
+   state
+   :names
+   #(conj % {:first (state :first-name-input) :last (state :last-name-input)})))
 
-(defn update!
+(defn edit
   "Update the currently-selected record.
    The new first and last names will be the values of 'first-name-input' and 'last-name-input'."
   [state]
-  (when (-> (@state :first-name-input) string/blank? not)
-    (reset! (r/cursor state [:names (@state :selected-id) :first]) (@state :first-name-input)))
-  (when (-> (@state :last-name-input) string/blank? not)
-    (reset! (r/cursor state [:names (@state :selected-id) :last]) (@state :last-name-input))))
+  (cond-> state
+    (-> (state :first-name-input) string/blank? not)
+    (assoc-in [:names (state :selected-id) :first] (state :first-name-input))
+    (-> (state :last-name-input) string/blank? not)
+    (assoc-in [:names (state :selected-id) :last] (state :last-name-input))))
+
 
 (defn dissoc-vec
   "Remove item at index 'idx' from vector 'vec'"
@@ -66,20 +75,19 @@
         (concat (subvec vec 0 idx)
                 (subvec vec (inc idx)))))
 
-(defn delete!
+
+(defn delete
   "Delete the current-selected record.
    If the deleted record was the first in the list:
    The first record in the list post-deletion will be selected.
    Otherwise:
    The record preceding the deleted record will be selected."
   [state]
-  (swap!
-   (r/cursor state [:names])
-   #(dissoc-vec % (@state :selected-id)))
-  (swap!
-   (r/cursor state [:selected-id])
-   (fn [id] (if (> id 0) (dec id) 0)))
-  (reset-name-inputs! state))
+  (-> state
+      (update :names #(dissoc-vec % (state :selected-id)))
+      (update :selected-id #(if (> % 0) (dec %) 0))
+      (reset-name-inputs)))
+
 
 (defn main []
   (fn []
@@ -111,7 +119,7 @@
                  "h-48"
                  "overflow-scroll"]}
         (doall
-         (for [[key name] (get-filtered-names state)]
+         (for [[key name] (get-filtered-names @state)]
            [:li
             {:class (concat
                      ["px-1"]
@@ -119,7 +127,7 @@
                        ["bg-blue-600" "text-white"]))
              :on-click (fn [_e]
                          (reset! (r/cursor state [:selected-id]) key)
-                         (reset-name-inputs! state))
+                         (swap! state reset-name-inputs))
              :key key}
             [:a
              (str (name :first) " " (name :last))]]))]]
@@ -156,17 +164,17 @@
       [:button
        {:class ["w-full"
                 "btn-green"]
-        :on-click #(create! state)}
+        :on-click #(swap! state create)}
        "Create"]
 
       [:button
        {:class ["w-full"
                 "btn-blue"]
-        :on-click #(update! state)}
+        :on-click #(swap! state edit)}
        "Update"]
 
       [:button
        {:class ["w-full"
                 "btn-red"]
-        :on-click #(delete! state)}
+        :on-click #(swap! state delete)}
        "Delete"]]]))

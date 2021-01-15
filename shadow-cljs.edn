@@ -15,4 +15,9 @@
         :modules {:main {:init-fn app.core/init}}
         :devtools {:repl-init-ns app.core
                    :http-root "resources/public"
-                   :http-port 3000}}}}
+                   :http-port 3000}}
+
+  :test {:target :browser-test
+         :test-dir  "resources/public/js/test"
+         :devtools  {:http-port 8021
+                     :http-root "resources/public/js/test"}}}}
