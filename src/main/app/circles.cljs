@@ -41,8 +41,9 @@
    (-> state :mouse-pos (nth 1))))
 
 
-(defn distance [x1 y1 x2 y2]
+(defn distance
   "Get the distance between two points."
+  [x1 y1 x2 y2]
   (js/Math.sqrt
    (+
     (js/Math.pow (- x1 x2) 2)
