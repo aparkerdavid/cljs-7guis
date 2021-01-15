@@ -61,6 +61,16 @@
             :redo-queue []
             :mouse-pos []}))))
 
+
+(deftest edit-circle-stop
+
+  (testing "Invalid edit-circle-at-mouse"
+    (is (= (circles/edit-circle-at-mouse
+            {:circles [{:x 100 :y 100 :r 20}]
+             :mouse-pos [200 200]})
+           {:circles [{:x 100 :y 100 :r 20}]
+            :mouse-pos [200 200]}))))
+
 (deftest undo
 
   (testing "Undo circle creation"

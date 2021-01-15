@@ -87,8 +87,9 @@
   "Begin editing the circle the mouse pointer is currently inside.
    This does not actually change the circle, but allows for a prospective change to be previewed."
   [state]
-  (when-let [circle (get-circle-at-mouse state)]
-    (assoc state :editing-circle circle)))
+  (if-let [circle (get-circle-at-mouse state)]
+    (assoc state :editing-circle circle)
+    state))
 
 
 (defn edit-circle-stop
@@ -111,27 +112,33 @@
   "Perform an operation determined by the last operation in the undo queue.
    This removes the last item from the undo queue, add a corresponding item to the redo queue."
   [state]
-  (when-let [op (last (:undo-queue state))]
-    (if (= op :delete-last)
+  (let [op (last (:undo-queue state))]
+    (cond
+      (= op :delete-last)
       (-> state
           (update :undo-queue pop)
           (update :redo-queue #(conj % (-> state :circles last (dissoc :r))))
           (update :circles pop))
+      (:r op)
       (let [{idx :idx r :r} (-> state :undo-queue last)]
         (-> state
             (update :undo-queue pop)
             (assoc-in [:circles idx :r] r)
-            (update :redo-queue #(conj % {:idx idx :r (-> state :circles (nth idx) :r)})))))))
+            (update :redo-queue #(conj % {:idx idx :r (-> state :circles (nth idx) :r)}))))
+      :else state)))
 
 
 (defn redo
   "Perform an operation determined by the last operation in the redo queue.
    This removes the last item from the redo queue, add a corresponding item to the undo queue."
   [state]
-  (when-let [op (-> state :redo-queue last)]
-    (if (:x op) ;; A Create op will have an :x key, a Resize op will not.
+  (let [op (-> state :redo-queue last)]
+    (cond
+      (:x op) ;; A Create op will have an :x key
       (create-circle state (:x op) (:y op))
-      (resize-circle state (:idx op) (:r op)))))
+      (:r op) ;; A Resize op will have an :r key
+      (resize-circle state (:idx op) (:r op))
+      :else state)))
 
 
 (defn draw-circle!
