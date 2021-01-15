@@ -35,10 +35,8 @@
 (defn create-circle-at-mouse
   "Create a circle at the current location of the mouse pointer."
   [state]
-  (create-circle
-   state
-   (-> state :mouse-pos (nth 0))
-   (-> state :mouse-pos (nth 1))))
+  (let [[mouse-x mouse-y] (:mouse-pos state)]
+    (create-circle state mouse-x mouse-y)))
 
 
 (defn distance
