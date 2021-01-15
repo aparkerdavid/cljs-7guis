@@ -188,7 +188,7 @@
     (fn []
       [:input
        {:type "text"
-        :class ["w-24"]
+        :class ["w-24" "h-12"]
         :style {:position "relative"
                 :margin "-1px"}
                 ;; :z-index (if @editing "1" nil)
@@ -231,14 +231,14 @@
                  "top-0"
                  "z-20"]}
         [:div
-         {:class ["border-2" "border-gray-600" "bg-gray-100" "h-10" "w-24"]
+         {:class ["border-2" "border-gray-600" "bg-gray-100" "h-12" "w-24"]
           :style {:margin "-2px"}}
          ""]]
        (for [letter cell-letters-range]
          [:th {:key letter
                :class ["sticky" "top-0" "z-20"]}
           [:div {:class
-                 ["border-2" "border-gray-600" "bg-gray-100" "h-10" "w-24" "p-1" "uppercase"]
+                 ["border-2" "border-gray-600" "bg-gray-100" "h-12" "w-24" "p-2" "uppercase"]
                  :style {:margin "-2px"}} letter]])]]
      [:tbody
       (for [number cell-numbers-range]
@@ -247,7 +247,7 @@
          [:td
           {:class ["sticky" "left-0" "z-10"]}
           [:div
-           {:class ["align-middle" "border-2" "border-gray-600" "bg-gray-100" "p-1" "h-10" "w-24" "text-center"]
+           {:class ["align-middle" "border-2" "border-gray-600" "bg-gray-100" "p-2" "h-12" "w-24" "text-center"]
             :style {:margin "-2px"}}
            number]]
          (for [letter cell-letters-range]
