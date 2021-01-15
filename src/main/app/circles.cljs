@@ -231,13 +231,14 @@
           :height 600
 
           :on-mouse-move
-          (fn [e]
-            (reset! (r/cursor state [:mouse-pos]) (mouse-xy e)))
+          #(reset-mouse-pos! %)
+
+          :on-click
+          #(swap! state create-circle-at-mouse)
+
           :on-context-menu
           (fn [e]
             (.preventDefault e)
-            (swap! state edit-circle-at-mouse))
-          :on-click
-          (fn [_]
-            (swap! state create-circle-at-mouse))}]]
+            (swap! state edit-circle-at-mouse))}]]
+
        [editor]])}))
