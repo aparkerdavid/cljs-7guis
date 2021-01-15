@@ -1,7 +1,6 @@
 (ns crud-test
   (:require [clojure.test :refer [deftest testing is]]
-            [app.crud :as crud]
-            [reagent.core :as r]))
+            [app.crud :as crud]))
 
 (deftest get-filtered-names
   (testing "get-filtered-names"
