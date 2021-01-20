@@ -32,8 +32,9 @@
          :min "0"
          :max "1000"
          :value (* 1000 (/ @elapsed @limit))}]
-       [:div (str @elapsed " / " @limit)]
-       [:div (/ @elapsed @limit)]
+       [:div
+        {:class "text-center"}
+        (str @elapsed " / " @limit)]
        [limit-slider limit]
        [:div
         [:button
@@ -47,11 +48,11 @@
               "font-bold"
               "border-red-600"]
              ["btn-green"]))
-          :on-click (fn [e] (swap! active not))}
+          :on-click #(swap! active not)}
          (if @active "Stop" "Start")]
         [:button
          {:class
           ["w-full"
            "btn-blue"]
-          :on-click (fn [e] (reset! elapsed 0))}
+          :on-click  (reset! elapsed 0)}
          "Reset"]]])))
