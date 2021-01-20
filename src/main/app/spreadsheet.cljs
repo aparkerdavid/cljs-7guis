@@ -69,9 +69,7 @@
        (= item '()) nil
        (list? item) item
        (number? item) item
-       (keyword? item)
-       ;; Keywords are converted to lowercase before lookup.
-       (-> item name string/lower-case keyword state :value)
+       (string? item) item
        (= '+ item) 'cljs.core/+
        (= '- item) 'cljs.core/-
        (= '* item) 'cljs.core/*
@@ -79,6 +77,9 @@
        (= '** item) 'js/Math.pow
        (= 'sqrt item) 'js/Math.sqrt
        (= 'root item) 'app.spreadsheet/root
+       (keyword? item)
+       ;; Keywords are converted to lowercase before lookup.
+       (-> item name string/lower-case keyword state :value)
        :else nil))
    formula))
 
@@ -87,15 +88,28 @@
   "Check if formula-str should be treated as a number of a function by looking at its first char.
   If the first char is a number, Treat it as a number. Else, treat it as a function."
   [formula-str state]
-  (if (-> formula-str first js/parseInt js/isNaN)
-    (->
+  (let [fn-strs #{"+" "-" "*" "/" "**" "sqrt" "root"}]
+    (cond
     ;; If formula-str is a function, read it as if it were wrapped in parens.
-     (reader/read-string (str \( formula-str \)))
-     (expand-formula state)
-     (eval-list))
+      (some true? (map #(string/starts-with? formula-str %) fn-strs))
+      (-> (reader/read-string (str \( formula-str \)))
+          (expand-formula state)
+          (eval-list))
 
     ;; If it is a number, read it as-is
-    (reader/read-string formula-str)))
+      (-> formula-str first js/parseInt js/Number.isInteger)
+      (reader/read-string formula-str)
+
+    ;; Otherwise, 
+      :else
+      formula-str)))
+
+
+(comment
+  (expand-formula "foo" @state)
+  (-> "4.5" first js/parseInt js/Number.isInteger)
+  (solve-formula "4" @state)
+  (solve-formula "foo" @state))
 
 
 (defn get-parents
