@@ -1,7 +1,7 @@
 module.exports = {
   purge: {
-    enabled: true,
-    content: ['.src/**/*.cljs']
+    // enabled: true,
+    // content: ['.src/**/*.cljs']
   },
   darkMode: false, // or 'media' or 'class'
   theme: {

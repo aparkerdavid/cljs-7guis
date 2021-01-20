@@ -99,16 +99,17 @@
                "flex-col"
                "md:flex-row"
                "justify-evenly"
-               "gap-2"
                "mb-4"]}
       [:div ;; Filter and Namelist
+       {:class ["m-1"
+                "sm:w-1/2"]}
 
 
        [:div ;; Filter
         {:class ["mb-4"]}
         [:div "Filter: "]
         [:input
-         {:class ["w-full" "sm:w-auto"]
+         {:class ["w-full" "sm:px-2"]
           :type "text"
           :value (@state :filter-str)
           :on-change (fn [e] (reset! (r/cursor state [:filter-str]) (-> e .-target .-value)))}]]
@@ -133,6 +134,8 @@
              (str (name :first) " " (name :last))]]))]]
 
       [:div ;; First and Last Name Fields
+       {:class ["m-1"]}
+
 
        [:div
         {:class ["mb-4"]}
@@ -156,25 +159,32 @@
 
      [:div ;; Buttons block
       {:class ["w-full"
+               "px-1"
+               "sm:px-0"
                "flex"
                "flex-col"
-               "sm:flex-row"
-               "gap-2"]}
+               "sm:flex-row"]}
 
       [:button
-       {:class ["w-full"
+       {:class ["my-1"
+                "sm:mx-1"
+                "w-full"
                 "btn-green"]
         :on-click #(swap! state create)}
        "Create"]
 
       [:button
-       {:class ["w-full"
+       {:class ["my-1"
+                "sm:mx-1"
+                "w-full"
                 "btn-blue"]
         :on-click #(swap! state edit)}
        "Update"]
 
       [:button
-       {:class ["w-full"
+       {:class ["my-1"
+                "sm:mx-1"
+                "w-full"
                 "btn-red"]
         :on-click #(swap! state delete)}
        "Delete"]]]))

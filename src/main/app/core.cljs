@@ -15,7 +15,7 @@
     [:div
      {:class ["flow"]}
      [:h1
-      {:class ["text-6xl"]}
+      {:class ["text-6xl" "text-center"]}
       "7 GUIs"]
      [counter]
      [temperature-converter]
