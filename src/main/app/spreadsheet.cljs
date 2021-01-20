@@ -2,19 +2,22 @@
   (:require [reagent.core :as r]
             [cljs.js :refer [eval js-eval]]
             [cljs.reader :as reader]
+            [clojure.walk :as walk]
             [clojure.string :as string]))
 
 
 (def cell-letters-range
+  "A list of lowercase letters a-z"
   (map js/String.fromCharCode (range (.charCodeAt "a") (inc (.charCodeAt "z")))))
 
 
 (def cell-numbers-range
+  "A list of whole numbers 1-99"
   (range 1 100))
 
 
 (defonce
-  state-1
+  state
   (r/atom {}))
 
 
@@ -60,7 +63,7 @@
   If it's one of the supported function symbols, replace it with the appropriate function
   Anything else: replace it with nil."
   [formula state]
-  (clojure.walk/postwalk
+  (walk/postwalk
    (fn [item]
      (cond
        (= item '()) nil
@@ -208,7 +211,7 @@
 
 (defn cell-field [cell-id]
   (let [editing-formula (r/atom nil)
-        cell-value (r/cursor state-1 [cell-id :value])]
+        cell-value (r/cursor state [cell-id :value])]
     (fn []
       [:input
        {:type "text"
@@ -224,11 +227,11 @@
             (.. js/document -activeElement blur)))
 
         :on-focus
-        #(reset! editing-formula (deref (r/cursor state-1 [cell-id :formula])))
+        #(reset! editing-formula (deref (r/cursor state [cell-id :formula])))
 
         :on-blur
-        #(when (non-cyclical? cell-id @editing-formula @state-1)
-           (swap! state-1 (partial update-formula cell-id @editing-formula))
+        #(when (non-cyclical? cell-id @editing-formula @state)
+           (swap! state (partial update-formula cell-id @editing-formula))
            (reset! editing-formula nil))
 
         :on-change
