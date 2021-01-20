@@ -8,7 +8,7 @@
   },
   "scripts": {
     "watch-css": "npx postcss-cli -w ./src/css/main.css -o ./resources/public/main.css",
-    "build-css": "NODE_ENV=production npx postcss-cli ./src/css/main.css -o ./resources/public/main.css",
+    "build-css": "npx postcss-cli ./src/css/main.css -o ./resources/public/main.css",
     "build-prod": "npx shadow-cljs compile app && npm run build-css"
   },
   "dependencies": {
