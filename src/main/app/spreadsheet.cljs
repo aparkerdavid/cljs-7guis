@@ -46,7 +46,7 @@
   (js/Math.pow x (/ 1 y)))
 
 
-(defn expand-formula-1
+(defn expand-formula
   "Prepare a Formula (defined as a list) for evaluation as Clojure.
   This operation ensures that the Formula in question includes only supported operations.
   It also replaces references to other Cells with their respective values.
@@ -80,7 +80,7 @@
    formula))
 
 
-(defn solve-formula-1
+(defn solve-formula
   "Check if formula-str should be treated as a number of a function by looking at its first char.
   If the first char is a number, Treat it as a number. Else, treat it as a function."
   [formula-str state]
@@ -88,7 +88,7 @@
     (->
     ;; If formula-str is a function, read it as if it were wrapped in parens.
      (reader/read-string (str \( formula-str \)))
-     (expand-formula-1 state)
+     (expand-formula state)
      (eval-list))
 
     ;; If it is a number, read it as-is
@@ -105,7 +105,7 @@
        (filter keyword?)))
 
 
-(defn non-cyclical?-1
+(defn non-cyclical?
   "Check if a Formula would cause a cyclical reference if it were assigned to a given Cell, via BFS.
 
   First, find the Parents of the Formula in question.
@@ -144,37 +144,13 @@
   [state cell-id]
   (assoc-in
    state [cell-id :value]
-   (-> state cell-id :formula (solve-formula-1 state))))
+   (-> state cell-id :formula (solve-formula state))))
 
-
-(comment
-  (-> {:a1 {:value 3 :formula "+ 1 3" :children [:b1]}
-       :b1 {:value 5 :formula "+ :a1 5"}}
-      ((comp)
-       #(update-value % :a1)
-       #(update-value % :b1))))
 
 (defn update-values
   [state ids]
   (let [update-fn (apply comp (for [id (reverse ids)] #(update-value % id)))]
     (update-fn state)))
-
-
-(comment
-  (-> {:a1 {:value 6 :formula "+ 1 3" :children [:b1]}
-       :b1 {:value 1 :formula "+ :a1 5"}}
-      (update-value :a1)
-      (update-value :b1))
-  (-> {:a1 {:value 6 :formula "+ 1 3" :children [:b1]}
-       :b1 {:value 1 :formula "+ :a1 5"}}
-      ((comp #(update-value % :b1) #(update-value % :a1)))))
-
-
-(comment
-  (-> {:a1 {:value 6 :formula "+ 1 3" :children [:b1]}
-       :b1 {:value 1 :formula "+ :a1 5"}}
-      (update-values [:a1 :b1])))
-
 
 
 (defn update-value-chain
@@ -230,7 +206,7 @@
         (update-value-chain cell-id))))
 
 
-(defn cell-field-1 [cell-id]
+(defn cell-field [cell-id]
   (let [editing-formula (r/atom nil)
         cell-value (r/cursor state-1 [cell-id :value])]
     (fn []
@@ -251,7 +227,7 @@
         #(reset! editing-formula (deref (r/cursor state-1 [cell-id :formula])))
 
         :on-blur
-        #(when (non-cyclical?-1 cell-id @editing-formula @state-1)
+        #(when (non-cyclical? cell-id @editing-formula @state-1)
            (swap! state-1 (partial update-formula cell-id @editing-formula))
            (reset! editing-formula nil))
 
@@ -305,4 +281,4 @@
            [:td
             {:key letter
              :class ["p-0"]}
-            [cell-field-1 (keyword (str letter number))]])])]]]])
+            [cell-field (keyword (str letter number))]])])]]]])
