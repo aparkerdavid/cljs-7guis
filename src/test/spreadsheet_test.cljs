@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest testing is]]
             [app.spreadsheet :as spreadsheet]))
 
+
 (deftest non-cyclical?
   (testing "A non-cyclical input"
     (is (spreadsheet/non-cyclical?
