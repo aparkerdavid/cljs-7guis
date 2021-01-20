@@ -18,6 +18,6 @@
                    :http-port 3000}}
 
   :test {:target :browser-test
-         :test-dir  "resources/public/js/test"
+         :test-dir  "resources/private/test"
          :devtools  {:http-port 8021
-                     :http-root "resources/public/js/test"}}}}
+                     :http-root "resources/private/test"}}}}
