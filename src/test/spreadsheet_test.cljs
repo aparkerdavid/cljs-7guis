@@ -4,13 +4,13 @@
 
 (deftest non-cyclical?
   (testing "A non-cyclical input"
-    (is (spreadsheet/non-cyclical?-1
+    (is (spreadsheet/non-cyclical?
          {:cells {:a1 {:formula "+ :b1 :a2"} :b1 {:formula "+ :b2 :c3"}}}
          :c3
          "+ :h1 :b5")))
   (testing "a cyclical input"
     (is (not
-         (spreadsheet/non-cyclical?-1
+         (spreadsheet/non-cyclical?
           :c3
           "+ :a1 :b1"
           {:a1 {:formula "+ :b1 :a2"} :b1 {:formula "+ :b2 :c3"}})))))
