@@ -3,11 +3,10 @@
 ## Counter
 
 This one isn't too hard.
-### Design Notes
-
-### Implementation Notes
 
 ## Temperature Converter
+
+### Design Notes
 
 The input should only update if it contains a valid float.
 
@@ -21,7 +20,7 @@ In this example, =@input= tracks the state of the input field.
 When =@input= is modified, the state of the field changes with it.
 When the state of the field changes, =@input= only changes if the current state of the field is deemed valid.
 
-#+begin_src
+```
 [2|   ] => @input = 2   ;; @input tracks the state of the field.
 [2.|  ] => @input = 2   ;; Invalid input: state did not update.
 [2.5| ] => @input = 2.5 ;; Valid input: state did update.
@@ -31,24 +30,23 @@ When the state of the field changes, =@input= only changes if the current state 
 [-|   ] => @input = 2
 [-1|  ] => @input = -1
 [-12| ] => @input = -12
-#+end_src
+```
 
-
-### Design Notes
 
 ### Implementation Notes
 
 ## Flight Booker
 
-Our temperature converter had two fields, the state of each dependent on that of the other.  In this simple scenario, it made sense to store the state as two ratoms, and allow each field to freely modify the state of the other.
-
-Here, we have multiple inputs that each need to know the status of multiple /other/ inputs. In this scenario, it will be much simpler to bundle the full component state into a single ratom, which can be supplied to each input to read and write.
+### Design Notes
 
 Validation needs to work differently here, too. Where the temperature inputs only needed to deal with two states (valid or invalid float), our date input needs a third: incomplete.
 
 For example: neither "05/03/2" nor "99/03/2021" is a valid date input. But in the former case, it's possible (and likely) that the user is in the middle of filling in a valid date, whereas in the latter we know that the input cannot be valid.
 
 We don't want our validator "crying wolf" as the user is trying to fill out the form. It's annoying, disrespectful ("you're doing it wrong! you're doing it wrong!") reduces our credibility in the case that there's actually something wrong with the input. Modeling an incomplete state allows us to avoid telling the user they're wrong unless we /know/ they're wrong.
+
+
+### Implementation Notes
 
 Checking for date validity:
 Make a JS date object from the date string.
@@ -61,20 +59,7 @@ FIrst: check for NaNs. If nans, invalid.
 Second: check completeness. If complete...
 Finally: Check coercions. If no coercions: complete. Otherwise: invalid.
 
-Our input forms need to be a bit more complex than in the Temperature Converter. 
 
-It accepts a =context= prop which is expected to contain the full component state, and a =value= prop which is expected to be the key representing the state of the current input.
-
-=flight-date-input= also allows us to pass in functions to determine if the field should be valid (a function of the field's current value) and disabled (a function of the component's state).
-
-With =flight-date-input=, we could be moving towards a customizable general-purpose input field component.
-
-If we wanted to, we could re-implement the Temperature Converter using =flight-date-input=. I don't think it makes sense to do that yet: It would make Temperature Conerter a bit more complex and less clear, and two different types of input field isn't too hard to keep track of. But in an application with a lot of subtly different input fields (more than the present two, at least) it might be simpler to have a single input field component that can be customized to suit many purposes.
-
-
-### Design Notes
-
-### Implementation Notes
 
 ## CRUD
 
@@ -84,6 +69,12 @@ If we wanted to, we could re-implement the Temperature Converter using =flight-d
 
 ## Circles
 
+### Design Notes
+
+The prompt calls for the radius adjustment control to appear in a popup window, but this is a pretty bad idea on the web.  Instead, we're going to have it replace the Undo and Redo controls, which shouldn't be usable during radius adjustment anyway.
+
+
+### Implementation Notes
 
 Add circle:
 Push radius and position to circles vector.
@@ -117,12 +108,6 @@ If it's an index and a radius, we're redoing a resize.
 Push circle index and current radius to undo vector
 Assoc the new radius onto the circle
 
-The prompt calls for the radius adjustment control to appear in a popup window, but this is a pretty bad idea on the web.  Instead, we're going to have it replace the Undo and Redo controls, which shouldn't be usable during radius adjustment anyway.
-
-
-### Design Notes
-
-### Implementation Notes
 
 ## Spreadsheet
 
@@ -181,7 +166,7 @@ Ex:
 
 Present the Cells as a grid of fields, [A-Z] x [1-99]. Traditional spreadsheet style.
 Display the Value of each Cell in its corresponding field.
-When the field is double-clicked, display an editable readout of the Cell's Formula.
+When the field is double-selected, display an editable readout of the Cell's Formula.
 When editing:
 - press Enter to commit the Formula update.
 - press Escape or click elsewhere to cancel the edit.
@@ -193,8 +178,9 @@ Each node of a formula must be:
 - a Number
 - a Keyword
 - a Function
-  =+ - / * ** sqrt root=
+  `+ - / * ** sqrt root`
 - a List
+- a String
 
 We're not going to get into the finer points of Clojure parsing and validation (=eval= can handle that) we're just going to make sure all the tokens are OK with the subset of Clojure that we want to use.
 
@@ -202,3 +188,8 @@ We're not going to get into the finer points of Clojure parsing and validation (
 ### Design Notes
 
 ### Implementation Notes
+
+
+  `eval-compiler-opts`
+  "Bit of a hack here, I'll admit I don't fully understand what's going on.
+  As far as I can tell, the default behavior of cljs.js/eval is to treat unqualified symbols as being namespaced under cljs.user. This creates a problem when trying to call core functions, as eval is looking for them in the cljs.user namespace rather than cljs.core. The following options map is based on cljs.js/empty-state (apparently the default) but aliases the cljs.core namespace to cljs.user, allowing core functions to be used normally. It also allows use of symbols in the app.spreadsheet (i.e. current) namespace."
