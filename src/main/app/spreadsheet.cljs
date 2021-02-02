@@ -1,6 +1,7 @@
 (ns app.spreadsheet
   (:require [reagent.core :as r]
-            [cljs.js :refer [eval js-eval]]
+            [sci.core :as sci]
+            [cljs.js :refer [eval js-eval empty-state]]
             [cljs.reader :as reader]
             [clojure.walk :as walk]
             [clojure.string :as string]))
@@ -30,6 +31,14 @@
          :cljs.analyzer/externs nil
          :options {}}))
 
+(def eval-compiler-opts-1
+  "Bit of a hack here. See implementation notes."
+  (atom {:cljs.analyzer/namespaces {'app.spreadsheet {:name 'app.spreadsheet}}
+         :cljs.analyzer/constant-table {}
+         :cljs.analyzer/data-readers {}
+         :cljs.analyzer/externs nil
+         :options {}}))
+
 
 (defn eval-list
   "Evaluate a list.
@@ -43,10 +52,71 @@
         :value))
 
 
-(defn root
+(defn ^:export root
   "Take the y-th root of x"
   [x y]
   (js/Math.pow x (/ 1 y)))
+
+
+(def supported-ops #{'+ '- '/ '* '** 'sqrt 'root})
+
+(defn get-cell-reference
+  [s state]
+  (-> s
+      string/lower-case
+      keyword
+      state
+      :value))
+
+(comment
+  (def cell-reference-re #"(?<=\ )([A-Z]|[a-z])[1-9][0-9]?((?=[\ ,\)])|$)")
+  (re-find cell-reference-re "+ a1 b1 c1")
+  (re-find #"a1" "+ a1 b1 c1")
+  (re-seq cell-reference-re "+ a1 (* b1 c1)")
+  (string/replace "+ a1 (* b1 c1)" #"a1" string/upper-case)
+  (string/replace "+ a1 (* B1 c1 d1000 e10)" cell-reference-re #(-> % first (get-cell-reference {:a1 {:value 1} :b1 {:value 2} :c1 {:value 3}})))
+  (get-cell-reference "a1" {:a1 "foo"}))
+
+
+(def cell-reference-re #"(?<=\ )([A-Z]|[a-z])[1-9][0-9]?((?=[\ ,\)])|$)")
+
+
+(defn eval-formula-str
+  [formula-str state]
+  (cond
+    (empty? formula-str)
+    {:kind nil
+     :value formula-str}
+    (some true? (map #(string/starts-with? formula-str %) (map #(str % " ") supported-ops)))
+    (try
+      (as-> formula-str s
+        (string/replace s cell-reference-re #(-> % first (get-cell-reference state)))
+        (str "(" s ")")
+        (sci/eval-string s)
+        {:kind :derived
+         :value s})
+      (catch js/Error _
+        {:kind :invalid
+         :value formula-str}))
+    (-> formula-str js/parseFloat js/isNaN not)
+    {:kind :number
+     :value (js/parseFloat formula-str)}
+    :else
+    {:kind :text
+     :value formula-str}))
+
+
+(comment
+  (empty? "")
+  (eval-formula-str "foo" {})
+  (eval-formula-str "" {})
+  (eval-formula-str "4" {})
+  (eval-formula-str "+ 1 1" {})
+  (eval-formula-str "- 1 :a55" {})
+  (eval-formula-str "+ 1 a1" {:a1 {:value 1}})
+  (eval-formula-str "+ 1 x1000" {:a1 {:value 1}})
+  (eval-formula-str "+Foo2" {}))
+
 
 
 (defn expand-formula
@@ -70,19 +140,19 @@
        (list? item) item
        (number? item) item
        (string? item) item
-       (= '+ item) 'cljs.core/+
-       (= '- item) 'cljs.core/-
-       (= '* item) 'cljs.core/*
-       (= '/ item) 'cljs.core//
-       (= '** item) 'js/Math.pow
-       (= 'sqrt item) 'js/Math.sqrt
+       (= '+ item) item
+      ;;  (= '+ item) 'cljs.core/+
+      ;;  (= '- item) 'cljs.core/-
+      ;;  (= '* item) 'cljs.core/*
+      ;;  (= '/ item) 'cljs.core//
+      ;;  (= '** item) 'js/Math.pow
+      ;;  (= 'sqrt item) 'js/Math.sqrt
        (= 'root item) 'app.spreadsheet/root
-       (keyword? item)
        ;; Keywords are converted to lowercase before lookup.
+       (keyword? item)
        (-> item name string/lower-case keyword state :value)
        :else nil))
    formula))
-
 
 (defn solve-formula
   "Check if formula-str should be treated as a number of a function by looking at its first char.
@@ -112,7 +182,7 @@
   (solve-formula "foo" @state))
 
 
-(defn get-parents
+(defn get-parents-old
   "A simple way to find a Cell's Parents: identify all the keywords in its Formula."
   [formula-str]
   (->> formula-str
@@ -120,6 +190,16 @@
        reader/read-string
        flatten
        (filter keyword?)))
+
+(defn get-parents
+  [formula-str]
+  (try
+    (->> formula-str
+         (re-seq cell-reference-re)
+         (map first)
+         (map string/lower-case)
+         (map keyword))
+    (catch js/Error _ nil)))
 
 
 (defn non-cyclical?
@@ -140,6 +220,7 @@
                         (map #(-> state % :formula))
                         (map get-parents)
                         flatten
+                        (filter some?)
                         (into #{}))))))
 
 
@@ -156,12 +237,19 @@
              (fn [children] (filter #(not= child-id %) children))))
 
 
-(defn update-value
+(defn update-value-old
   "Set the Value of a given cell to the result of the evaluation of its Formula."
   [state cell-id]
   (assoc-in
    state [cell-id :value]
    (-> state cell-id :formula (solve-formula state))))
+
+
+(defn update-value
+  "Set the Value of a given cell to the result of the evaluation of its Formula."
+  [state cell-id]
+  (update state cell-id
+          #(conj % (-> state cell-id :formula (eval-formula-str state)))))
 
 
 (defn update-values
@@ -225,11 +313,19 @@
 
 (defn cell-field [cell-id]
   (let [editing-formula (r/atom nil)
-        cell-value (r/cursor state [cell-id :value])]
+        cell-value (r/cursor state [cell-id :value])
+        cell-kind (r/cursor state [cell-id :kind])]
     (fn []
       [:input
        {:type "text"
-        :class ["w-24" "h-12"]
+        :class ["w-24"
+                "h-12"
+                (case @cell-kind
+                  :text "bg-green-100"
+                  :number "bg-purple-100"
+                  :derived "bg-yellow-100"
+                  :invalid "bg-red-100"
+                  nil)]
         :style {:position "relative"
                 :margin "-1px"}
 
@@ -246,6 +342,7 @@
         :on-blur
         #(when (non-cyclical? cell-id @editing-formula @state)
            (swap! state (partial update-formula cell-id @editing-formula))
+           (println @state)
            (reset! editing-formula nil))
 
         :on-change

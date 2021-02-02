@@ -187,6 +187,28 @@ We're not going to get into the finer points of Clojure parsing and validation (
 
 ### Design Notes
 
+#### Cell behavior:
+
+If input looks like a function:
+Try to evaluate it.
+
+##### Evaluation behavior:
+
+Replace all references with their values.
+To find a reference in a string, look for: a space, followed by a single letter, followed by a number between 1 and 99, followed by a space, closing paren, or end-of-string.
+To evaluate a reference: lowercase, then convert to a :keyword.  Look up the :keyword in @state.
+Replace the letter and number characters with the result.
+
+If it works, set the value to the result, as a derived value.
+If not, set the value to the input, as an error.
+
+If input does not look like a function:
+Try evaluate it as a number.
+If it works, set the value to the result, as a number.
+If not, try to evaluate it as a reference.
+If it works, set the value to the result, as a derived value.
+Otherwise, set the value to the input, as a string.
+
 ### Implementation Notes
 
 
