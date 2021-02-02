@@ -78,7 +78,7 @@
   (get-cell-reference "a1" {:a1 "foo"}))
 
 
-(def cell-reference-re #"(?<=\ )([A-Z]|[a-z])[1-9][0-9]?((?=[\ ,\)])|$)")
+(def cell-reference-re #"([A-Z]|[a-z])[1-9][0-9]?((?=[\ ,\)])|$)")
 
 
 (defn eval-formula-str
