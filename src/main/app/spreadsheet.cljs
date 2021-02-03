@@ -19,7 +19,7 @@
   (range 1 100))
 
 
-(defn ^:export root
+(defn root
   "Take the y-th root of x"
   [x y]
   (js/Math.pow x (/ 1 y)))
@@ -51,7 +51,7 @@
       (as-> formula-str s
         (string/replace s cell-reference-re #(-> % first (get-cell-reference state)))
         (str "(" s ")")
-        (sci/eval-string s)
+        (sci/eval-string s {:bindings {'root root 'sqrt js/Math.sqrt '** js/Math.pow}})
         {:kind :derived
          :value s})
       (catch js/Error _
