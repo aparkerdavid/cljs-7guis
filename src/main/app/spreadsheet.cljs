@@ -1,9 +1,6 @@
 (ns app.spreadsheet
   (:require [reagent.core :as r]
             [sci.core :as sci]
-            [cljs.js :refer [eval js-eval empty-state]]
-            [cljs.reader :as reader]
-            [clojure.walk :as walk]
             [clojure.string :as string]))
 
 
