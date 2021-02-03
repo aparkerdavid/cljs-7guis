@@ -7,6 +7,11 @@
             [clojure.string :as string]))
 
 
+(defonce
+  state
+  (r/atom {}))
+
+
 (def cell-letters-range
   "A list of lowercase letters a-z"
   (map js/String.fromCharCode (range (.charCodeAt "a") (inc (.charCodeAt "z")))))
@@ -17,41 +22,6 @@
   (range 1 100))
 
 
-(defonce
-  state
-  (r/atom {}))
-
-
-(def eval-compiler-opts
-  "Bit of a hack here. See implementation notes."
-  (atom {:cljs.analyzer/namespaces {'cljs.user {:name 'cljs.core}
-                                    'app.spreadsheet {:name 'app.spreadsheet}}
-         :cljs.analyzer/constant-table {}
-         :cljs.analyzer/data-readers {}
-         :cljs.analyzer/externs nil
-         :options {}}))
-
-(def eval-compiler-opts-1
-  "Bit of a hack here. See implementation notes."
-  (atom {:cljs.analyzer/namespaces {'app.spreadsheet {:name 'app.spreadsheet}}
-         :cljs.analyzer/constant-table {}
-         :cljs.analyzer/data-readers {}
-         :cljs.analyzer/externs nil
-         :options {}}))
-
-
-(defn eval-list
-  "Evaluate a list.
-  see https://github.com/yogthos/cljs-eval-example/blob/master/src/cljs/cljs_eval_example/core.cljs"
-  [list]
-  (eval eval-compiler-opts
-        list
-        {:eval       js-eval
-         :source-map true
-         :context    :expr}
-        :value))
-
-
 (defn ^:export root
   "Take the y-th root of x"
   [x y]
@@ -60,6 +30,7 @@
 
 (def supported-ops #{'+ '- '/ '* '** 'sqrt 'root})
 
+
 (defn get-cell-reference
   [s state]
   (-> s
@@ -67,15 +38,6 @@
       keyword
       state
       :value))
-
-(comment
-  (def cell-reference-re #"(?<=\ )([A-Z]|[a-z])[1-9][0-9]?((?=[\ ,\)])|$)")
-  (re-find cell-reference-re "+ a1 b1 c1")
-  (re-find #"a1" "+ a1 b1 c1")
-  (re-seq cell-reference-re "+ a1 (* b1 c1)")
-  (string/replace "+ a1 (* b1 c1)" #"a1" string/upper-case)
-  (string/replace "+ a1 (* B1 c1 d1000 e10)" cell-reference-re #(-> % first (get-cell-reference {:a1 {:value 1} :b1 {:value 2} :c1 {:value 3}})))
-  (get-cell-reference "a1" {:a1 "foo"}))
 
 
 (def cell-reference-re #"([A-Z]|[a-z])[1-9][0-9]?((?=[\ ,\)])|$)")
@@ -105,91 +67,6 @@
     {:kind :text
      :value formula-str}))
 
-
-(comment
-  (empty? "")
-  (eval-formula-str "foo" {})
-  (eval-formula-str "" {})
-  (eval-formula-str "4" {})
-  (eval-formula-str "+ 1 1" {})
-  (eval-formula-str "- 1 :a55" {})
-  (eval-formula-str "+ 1 a1" {:a1 {:value 1}})
-  (eval-formula-str "+ 1 x1000" {:a1 {:value 1}})
-  (eval-formula-str "+Foo2" {}))
-
-
-
-(defn expand-formula
-  "Prepare a Formula (defined as a list) for evaluation as Clojure.
-  This operation ensures that the Formula in question includes only supported operations.
-  It also replaces references to other Cells with their respective values.
-  This function does not ensure that the Formula in question is valid Clojure (eval handles that.)
-  Each item in the list will be visited, and processed as such:
-
-  If the item in question is a list, leave it alone
-  (other than the empty list, which will become nil.)
-  If it's a number, leave it alone.
-  If it's a keyword, replace it with the value of the cell that it references.
-  If it's one of the supported function symbols, replace it with the appropriate function
-  Anything else: replace it with nil."
-  [formula state]
-  (walk/postwalk
-   (fn [item]
-     (cond
-       (= item '()) nil
-       (list? item) item
-       (number? item) item
-       (string? item) item
-       (= '+ item) item
-      ;;  (= '+ item) 'cljs.core/+
-      ;;  (= '- item) 'cljs.core/-
-      ;;  (= '* item) 'cljs.core/*
-      ;;  (= '/ item) 'cljs.core//
-      ;;  (= '** item) 'js/Math.pow
-      ;;  (= 'sqrt item) 'js/Math.sqrt
-       (= 'root item) 'app.spreadsheet/root
-       ;; Keywords are converted to lowercase before lookup.
-       (keyword? item)
-       (-> item name string/lower-case keyword state :value)
-       :else nil))
-   formula))
-
-(defn solve-formula
-  "Check if formula-str should be treated as a number of a function by looking at its first char.
-  If the first char is a number, Treat it as a number. Else, treat it as a function."
-  [formula-str state]
-  (let [fn-strs #{"+" "-" "*" "/" "**" "sqrt" "root"}]
-    (cond
-    ;; If formula-str is a function, read it as if it were wrapped in parens.
-      (some true? (map #(string/starts-with? formula-str %) fn-strs))
-      (-> (reader/read-string (str \( formula-str \)))
-          (expand-formula state)
-          (eval-list))
-
-    ;; If it is a number, read it as-is
-      (-> formula-str first js/parseInt js/Number.isInteger)
-      (reader/read-string formula-str)
-
-    ;; Otherwise, 
-      :else
-      formula-str)))
-
-
-(comment
-  (expand-formula "foo" @state)
-  (-> "4.5" first js/parseInt js/Number.isInteger)
-  (solve-formula "4" @state)
-  (solve-formula "foo" @state))
-
-
-(defn get-parents-old
-  "A simple way to find a Cell's Parents: identify all the keywords in its Formula."
-  [formula-str]
-  (->> formula-str
-       (#(str \( % \)))
-       reader/read-string
-       flatten
-       (filter keyword?)))
 
 (defn get-parents
   [formula-str]
@@ -235,14 +112,6 @@
   [state child-id cell-id]
   (update-in state [cell-id :children]
              (fn [children] (filter #(not= child-id %) children))))
-
-
-(defn update-value-old
-  "Set the Value of a given cell to the result of the evaluation of its Formula."
-  [state cell-id]
-  (assoc-in
-   state [cell-id :value]
-   (-> state cell-id :formula (solve-formula state))))
 
 
 (defn update-value
@@ -348,7 +217,6 @@
         :on-change
         (fn [e]
           (reset! editing-formula (-> e .-target .-value)))}])))
-
 
 
 (defn spreadsheet []
