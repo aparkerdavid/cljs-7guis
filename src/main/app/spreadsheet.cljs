@@ -24,6 +24,11 @@
   [x y]
   (js/Math.pow x (/ 1 y)))
 
+(defn avg
+  "Average two or more numbers."
+  [x y & zs]
+  (let [xs (flatten [x y zs])]
+    (/ (apply + xs) (count xs))))
 
 (def supported-ops #{'+ '- '/ '* '** 'sqrt 'root})
 
@@ -35,6 +40,9 @@
       keyword
       state
       :value))
+
+
+(def supported-ops #{'+ '- '/ '* '** 'SQRT 'ROOT 'AVG})
 
 
 (def cell-reference-re #"([A-Z]|[a-z])[1-9][0-9]?((?=[\ ,\)])|$)")
@@ -51,7 +59,7 @@
       (as-> formula-str s
         (string/replace s cell-reference-re #(-> % first (get-cell-reference state)))
         (str "(" s ")")
-        (sci/eval-string s {:bindings {'root root 'sqrt js/Math.sqrt '** js/Math.pow}})
+        (sci/eval-string s {:bindings {'ROOT root 'SQRT js/Math.sqrt '** js/Math.pow 'AVG avg}})
         {:kind :derived
          :value s})
       (catch js/Error _
