@@ -4,9 +4,9 @@
 
 
 (deftest get-parents
-  (is (= (spreadsheet/get-parents "+ a1 b1") '(:a1 :b1)))
-  (is (= (spreadsheet/get-parents "+ 1 2") '()))
-  (is (= (spreadsheet/get-parents "foo bar") '())))
+  (is (= (spreadsheet/get-references "+ a1 b1") '(:a1 :b1)))
+  (is (= (spreadsheet/get-references "+ 1 2") '()))
+  (is (= (spreadsheet/get-references "foo bar") '())))
 
 
 (deftest non-cyclical?

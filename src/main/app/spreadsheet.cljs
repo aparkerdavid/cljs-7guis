@@ -30,10 +30,11 @@
   (let [xs (flatten [x y zs])]
     (/ (apply + xs) (count xs))))
 
-(def supported-ops #{'+ '- '/ '* '** 'sqrt 'root})
-
 
 (defn get-cell-reference
+  "Given a string, (e.g. 'A1'), look up the associated value in 'state'.
+   e.g. Given the string 'A1', this function will return the equivalent of (state :a1 :value)
+   "
   [s state]
   (-> s
       string/lower-case
@@ -49,11 +50,20 @@
 
 
 (defn eval-formula-str
+  "Evaluate a formula (defined as a string) given the provided state map.
+   Returns a map containing :value and :kind keys.
+   :value can be nil, a number, or a string.
+   :kind can be nil, :number, :text, :derived, or :error.
+   :derived indicates the value is the result of a function call (e.g. '+ 1 A1')
+   :error indicates a failed function call.
+   :number and :text indicate literal values."
   [formula-str state]
   (cond
+    ;; If formula-str is empty:
     (empty? formula-str)
     {:kind nil
-     :value formula-str}
+     :value nil}
+    ;; If formula-str looks like a function:
     (some true? (map #(string/starts-with? formula-str %) (map #(str % " ") supported-ops)))
     (try
       (as-> formula-str s
@@ -65,6 +75,7 @@
       (catch js/Error _
         {:kind :invalid
          :value formula-str}))
+    ;; If formula-str can be parsed as a number:
     (-> formula-str js/parseFloat js/isNaN not)
     {:kind :number
      :value (js/parseFloat formula-str)}
@@ -73,7 +84,8 @@
      :value formula-str}))
 
 
-(defn get-parents
+(defn get-references
+  "Determine which cells are referenced in a formula."
   [formula-str]
   (try
     (->> formula-str
@@ -85,22 +97,22 @@
 
 
 (defn non-cyclical?
-  "Check if a Formula would cause a cyclical reference if it were assigned to a given Cell, via BFS.
+  "Check if a formula would cause a cyclical reference if it were assigned to a given cell.
 
-  First, find the Parents of the Formula in question.
+  First, find the parents of the formula in question.
   If there aren't any, return true. (Can't have a cyclical reference without any references)
-  Otherwise: check if the Cell in question is among the Parents.
+  Otherwise: check if the cell in question is among the parents.
   If so: we've found a cyclical reference, return false.
-  Otherwise: repeat the process with the combined set of the Parents of each Parent.
+  Otherwise: repeat the process with the combined set of the parents of each Parent.
   Eventually, we will either find a cyclical reference or run out of ancestors to test."
   [cell-id formula-str state]
-  (loop [current-batch (into #{} (get-parents formula-str))]
+  (loop [current-batch (into #{} (get-references formula-str))]
     (cond
       (current-batch cell-id) false
       (empty? current-batch) true
       :else (recur (->> current-batch
                         (map #(-> state % :formula))
-                        (map get-parents)
+                        (map get-references)
                         flatten
                         (filter some?)
                         (into #{}))))))
@@ -113,27 +125,28 @@
 
 
 (defn remove-child
-  "Given two Cells 'cell-id' and 'child-id', unregister child-id as a child of cell-id"
+  "Given two cells 'cell-id' and 'child-id', unregister child-id as a child of cell-id"
   [state child-id cell-id]
   (update-in state [cell-id :children]
              (fn [children] (filter #(not= child-id %) children))))
 
 
 (defn update-value
-  "Set the Value of a given cell to the result of the evaluation of its Formula."
+  "Set the value of a given cell to the result of the evaluation of its formula."
   [state cell-id]
   (update state cell-id
           #(conj % (-> state cell-id :formula (eval-formula-str state)))))
 
 
 (defn update-values
+  "Update multiple values"
   [state ids]
   (let [update-fn (apply comp (for [id (reverse ids)] #(update-value % id)))]
     (update-fn state)))
 
 
 (defn update-value-chain
-  "Update the values of a given cell and its descendents, in topological order via DFS."
+  "Update the values of a given cell and its descendents, in topological order via."
   [state cell-id]
   (loop [to-visit [cell-id]
          visited #{}
@@ -168,12 +181,12 @@
   This is the core function of the spreadsheet's update mechanism."
   [cell-id formula-str state]
   (let [old-parents
-        (-> state cell-id :formula get-parents)
+        (-> state cell-id :formula get-references)
         remove-old-children
         (apply comp
                (for [parent old-parents]
                  #(remove-child % cell-id parent)))
-        new-parents (get-parents formula-str)
+        new-parents (get-references formula-str)
         add-new-children
         (apply comp
                (for [parent new-parents]
