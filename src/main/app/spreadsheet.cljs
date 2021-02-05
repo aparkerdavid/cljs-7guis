@@ -24,11 +24,13 @@
   [x y]
   (js/Math.pow x (/ 1 y)))
 
+
 (defn avg
   "Average two or more numbers."
   [x y & zs]
   (let [xs (filter some? (flatten [x y zs]))]
     (/ (apply + xs) (count xs))))
+
 
 (defn get-cell-reference
   "Given a string, (e.g. 'A1'), look up the associated value in 'state'.
@@ -42,7 +44,42 @@
       :value))
 
 
+(defn expand-range
+  "If a string defines a valid range, return a string that defines each cell in that range.
+   Otherwise, return the string unchanged.
+   e.g:
+   'A1-E1' => 'A1 B1 C1 D1 E1'
+   'A1-A5' => 'A1 A2 A3 A4 A5'
+   'A1-X9' => 'A1-X9'
+   "
+  [range-str]
+  (let [[start end] (into [] (string/split range-str #"-"))
+        start-col (first start)
+        start-row (js/parseInt (subs start 1))
+        end-col (first end)
+        end-row (js/parseInt (subs end 1))]
+    (cond
+      ;; If it's a row range
+      (= start-col end-col)
+      (->>
+       (range start-row (inc end-row))
+       (map #(str start-col %))
+       (string/join " "))
+      ;; If it's a column range
+      (= start-row end-row)
+      (->>
+       (range (.charCodeAt start-col) (inc (.charCodeAt end-col)))
+       (map js/String.fromCharCode)
+       (map #(str % start-row))
+       (string/join " "))
+      :else
+      range-str)))
+
+
 (def supported-ops #{'+ '- '/ '* '** 'SQRT 'ROOT 'AVG})
+
+
+(def cell-range-reference-re #"([A-Z]|[a-z])[1-9][0-9]?-([A-Z]|[a-z])[1-9][0-9]?")
 
 
 (def cell-reference-re #"([A-Z]|[a-z])[1-9][0-9]?((?=[\ ,\)])|$)")
@@ -53,7 +90,7 @@
    Returns a map containing :value and :kind keys.
    :value can be nil, a number, or a string.
    :kind can be nil, :number, :text, :derived, or :error.
-   :derived indicates the value is the result of a function call (e.g. '+ 1 A1')
+   :derived indicates a number value is the result of a function call (e.g. '+ 1 A1')
    :error indicates a failed function call.
    :number and :text indicate literal values."
   [formula-str state]
@@ -66,9 +103,11 @@
     (some true? (map #(string/starts-with? formula-str %) (map #(str % " ") supported-ops)))
     (try
       (as-> formula-str s
+        (string/replace s cell-range-reference-re #(-> % first expand-range))
         (string/replace s cell-reference-re #(-> % first (get-cell-reference state)))
         (str "(" s ")")
-        (sci/eval-string s {:bindings {'ROOT root 'SQRT js/Math.sqrt '** js/Math.pow 'AVG avg}})
+        (sci/eval-string s {:bindings {'ROOT root 'SQRT js/Math.sqrt '** js/Math.pow 'AVG avg}
+                            :allow supported-ops})
         {:kind :derived
          :value s})
       (catch js/Error _
