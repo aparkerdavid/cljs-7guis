@@ -114,9 +114,11 @@
 
    To evaluate a formula-str:
    - First, check if it's empty. If so, :kind and :value are nil.
-   - Otherwise, check if it should be evaluated as a function.
-     - This is done by checking if it starts with one of the supported operations.
-     - If so, add leading and trailing parentheses, and evaluate.
+   - Otherwise, check if it starts with one of the supported operations..
+     - If so, it should be evaluated as a function: 
+     - First, expand all ranges.
+     - Then, add leading and trailing parentheses.
+     - Finally, read in as a list and evaluate.
      - :value will be the result of evaluation, :kind will be :derived.
    - Otherwise, check if it can be parsed as a number.
      If so, :value will be the parsed number, and :kind will be :number.
