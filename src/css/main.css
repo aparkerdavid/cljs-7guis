@@ -87,11 +87,13 @@ button:focus {
 }
 
 select {
+  padding-right: 10%;
   @apply appearance-none bg-white;
 }
 
 .dropdown {
   display: flex;
+  position: relative;
   align-items: center;
   @apply border-2
   appearance-none
@@ -102,12 +104,19 @@ select {
 }
 
 .dropdown::after {
+  position: absolute;
+  right: 10px;
   content: "";
   width: 0.8em;
   height: 0.5em;
   background-color: black;
   clip-path: polygon(100% 0%, 0 0%, 50% 100%);
-  justify-self: end;
+  @apply z-10;
+}
+
+select {
+  @apply bg-transparent
+  z-20;
 }
 
 select:focus {
