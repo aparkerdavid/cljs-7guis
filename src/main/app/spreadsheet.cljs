@@ -27,9 +27,8 @@
 (defn avg
   "Average two or more numbers."
   [x y & zs]
-  (let [xs (flatten [x y zs])]
+  (let [xs (filter some? (flatten [x y zs]))]
     (/ (apply + xs) (count xs))))
-
 
 (defn get-cell-reference
   "Given a string, (e.g. 'A1'), look up the associated value in 'state'.
