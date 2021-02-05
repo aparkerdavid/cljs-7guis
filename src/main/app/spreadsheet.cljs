@@ -1,6 +1,6 @@
 (ns app.spreadsheet
   (:require [reagent.core :as r]
-            [sci.core :as sci]
+            [cljs.reader :as reader]
             [clojure.string :as string]))
 
 
@@ -30,18 +30,6 @@
   [x y & zs]
   (let [xs (filter some? (flatten [x y zs]))]
     (/ (apply + xs) (count xs))))
-
-
-(defn get-cell-reference
-  "Given a string, (e.g. 'A1'), look up the associated value in 'state'.
-   e.g. Given the string 'A1', this function will return the equivalent of (state :a1 :value)
-   "
-  [s state]
-  (-> s
-      string/lower-case
-      keyword
-      state
-      :value))
 
 
 (defn expand-range
@@ -76,13 +64,33 @@
       range-str)))
 
 
-(def supported-ops #{'+ '- '/ '* '** 'SQRT 'ROOT 'AVG})
+(def supported-ops #{"+ " "- " "/ " "* " "** " "SQRT " "ROOT " "AVG "})
 
 
-(def cell-range-reference-re #"([A-Z]|[a-z])[1-9][0-9]?-([A-Z]|[a-z])[1-9][0-9]?")
+(def cell-range-re #"([A-Z]|[a-z])[1-9][0-9]?-([A-Z]|[a-z])[1-9][0-9]?")
 
 
 (def cell-reference-re #"([A-Z]|[a-z])[1-9][0-9]?((?=[\ ,\)])|$)")
+
+
+(defn eval-formula [expr state]
+  (let [sym->kw (comp keyword string/lower-case str)
+        lookup (fn [sym]
+                ((sym->kw sym)
+                 (conj 
+                  {:+ +
+                   :- -
+                   :/ /
+                   :* *
+                   :** js/Math.pow
+                   :sqrt js/Math.sqrt
+                   :root root
+                   :avg avg}
+                  (into {} (map (fn [[k v]] [k (:value v)]) state)))))]
+    (cond
+      (number? expr) expr
+      (symbol? expr) (lookup expr)
+      (list? expr) (apply (eval-formula (first expr) state) (map #(eval-formula % state) (rest expr))))))
 
 
 (defn eval-formula-str
@@ -100,14 +108,14 @@
     {:kind nil
      :value nil}
     ;; If formula-str looks like a function:
-    (some true? (map #(string/starts-with? formula-str %) (map #(str % " ") supported-ops)))
+    (some true? (map #(string/starts-with? formula-str %) supported-ops))
     (try
       (as-> formula-str s
-        (string/replace s cell-range-reference-re #(-> % first expand-range))
-        (string/replace s cell-reference-re #(-> % first (get-cell-reference state)))
+        (string/replace s cell-range-re #(-> % first expand-range))
         (str "(" s ")")
-        (sci/eval-string s {:bindings {'ROOT root 'SQRT js/Math.sqrt '** js/Math.pow 'AVG avg}
-                            :allow supported-ops})
+        (reader/read-string s)
+        (eval-formula s state)
+
         {:kind :derived
          :value s})
       (catch js/Error _
@@ -184,7 +192,7 @@
 
 
 (defn update-value-chain
-  "Update the values of a given cell and its descendents, in topological order via."
+  "Update the values of a given cell and its descendents, in topological order via dfs."
   [state cell-id]
   (loop [to-visit [cell-id]
          visited #{}
