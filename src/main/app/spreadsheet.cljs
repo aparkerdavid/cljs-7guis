@@ -73,7 +73,21 @@
 (def cell-reference-re #"([A-Z]|[a-z])[1-9][0-9]?((?=[\ ,\)])|$)")
 
 
-(defn eval-formula [expr state]
+(defn eval-formula
+  "Evaluate an expression using a limited subset of Clojure.
+
+   First, construct a lookup table consisting of:
+   - A mapping of allowed function symbols (keywordized) to their associated functions
+   - A mapping of each key in 'state' to its value.
+   
+   To evaluate an expression:
+   - If the expression is a number, leave it be.
+   - If the expression is a symbol, replace it with the matching value in the lookup table.
+   - If the expression is a list:
+     - Evaluate each item in the list.
+     - Apply the first list item as a function to the rest of the list items.
+   "
+  [expr state]
   (let [sym->kw (comp keyword string/lower-case str)
         lookup (fn [sym]
                 ((sym->kw sym)
@@ -96,11 +110,18 @@
 (defn eval-formula-str
   "Evaluate a formula (defined as a string) given the provided state map.
    Returns a map containing :value and :kind keys.
-   :value can be nil, a number, or a string.
-   :kind can be nil, :number, :text, :derived, or :error.
-   :derived indicates a number value is the result of a function call (e.g. '+ 1 A1')
-   :error indicates a failed function call.
-   :number and :text indicate literal values."
+   :kind will be used to color-code cells with input.
+
+   To evaluate a formula-str:
+   - First, check if it's empty. If so, :kind and :value are nil.
+   - Otherwise, check if it should be evaluated as a function.
+     - This is done by checking if it starts with one of the supported operations.
+     - If so, add leading and trailing parentheses, and evaluate.
+     - :value will be the result of evaluation, :kind will be :derived.
+   - Otherwise, check if it can be parsed as a number.
+     If so, :value will be the parsed number, and :kind will be :number.
+   - Otherwise, :value will be the unmodified string, and :kind will be :text.
+   "
   [formula-str state]
   (cond
     ;; If formula-str is empty:
