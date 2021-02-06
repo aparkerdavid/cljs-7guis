@@ -43,7 +43,7 @@
 
 (defn timer []
   [:div
-   {:class ["max-w-xs"]}
+   {:class ["card" "max-w-xs"]}
    [:input ;; A disabled input slider serves as our elapsed time readout.
     {:class ["w-full"]
      :type "range"

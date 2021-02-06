@@ -36,7 +36,7 @@
         fahrenheit-input (r/atom (c->f @celsius-input))]
     (fn []
       [:div
-       {:class ["max-w-xs"]}
+       {:class ["card" "max-w-xs"]}
        [:div
         {:class
          ["mb-4"]}

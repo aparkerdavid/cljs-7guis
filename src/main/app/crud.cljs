@@ -10,12 +10,12 @@
              :last "Mau"}
             {:first "Christopher"
              :last "Alexander"}
-            {:first "Jane"
-             :last "Jacobs"}]
+            {:first "Jeanne"
+             :last "Gang"}]
     :filter-str ""
     :selected-id 0
-    :first-name-input ""
-    :last-name-input ""}))
+    :first-name-input "Lebbeus"
+    :last-name-input "Woods"}))
 
 (defn get-filtered-names
   "Return a list of vectors: each contains an index and the name associated with it.
@@ -92,7 +92,7 @@
 (defn crud []
   (fn []
     [:div ;; Outermost container
-     {:class ["max-w-xs" "sm:max-w-lg"]}
+     {:class ["card" "max-w-xs" "sm:max-w-lg"]}
      [:div ;; Top block
       {:class ["w-full"
                "flex"
@@ -123,7 +123,7 @@
          (for [[key name] (get-filtered-names @state)]
            [:li
             {:class (concat
-                     ["px-1"]
+                     ["px-1" "cursor-pointer"]
                      (when (= (@state :selected-id) key)
                        ["bg-blue-600" "text-white"]))
              :on-click (fn [_e]

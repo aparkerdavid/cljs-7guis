@@ -91,7 +91,7 @@
 
 (defn flight-booker []
   [:div
-   {:class ["max-w-xs"]}
+   {:class ["card" "max-w-xs"]}
    [:div
     {:class
      ["mb-4"]}

@@ -5,6 +5,18 @@ body {
   background-color: white;
 }
 
+h1 {
+  @apply text-6xl;
+}
+
+h2 {
+  @apply text-3xl;
+}
+
+p {
+  @apply mt-4;
+}
+
 ::selection {
   @apply bg-blue-600 text-white;
 }
@@ -13,13 +25,12 @@ select::-ms-expand {
   display: none;
 }
 
-.flow > * + * {
+.card {
   @apply border-2
    border-gray-900
     bg-white 
-    mt-16
-     p-8
-      mx-auto;
+    p-8;
+  /* mx-auto; */
 }
 
 input {

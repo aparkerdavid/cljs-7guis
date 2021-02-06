@@ -164,7 +164,7 @@
         circle-at-mouse (get-circle-at-mouse @state)
         editing-circle (:editing-circle @state)]
     (set! (. ctx -fillStyle) "#eee")
-    (.fillRect ctx 0 0 800 600)
+    (.fillRect ctx 0 0 640 640)
     (->> @state
          :circles
          (map-indexed
@@ -201,7 +201,7 @@
                (let [v (-> e .-target .-value)]
                  (swap! editing-circle #(assoc % :r v))))}]]
           [:div
-           {:class ["flex" "flex-col" "gap-2" "sm:flex-row"]}
+           {:class ["flex" "flex-col" "sm:flex-row"]}
            [:button
             {:class ["btn-red" "w-full"]
              :on-click
@@ -242,13 +242,13 @@
     :reagent-render
     (fn []
       [:div
-       {:class ["p-0" "max-w-min"]}
+       {:class ["p-0" "max-w-min" "card"]}
        [:div
-        {:class ["overflow-scroll" "w-full"]}
+        {:class ["overflow-scroll" "bg-green-100" "w-full"]}
         [:canvas
          {:id "circles-canvas"
-          :width 800
-          :height 600
+          :width 640
+          :height 640
 
           :on-mouse-move
           #(reset-mouse-pos! %)

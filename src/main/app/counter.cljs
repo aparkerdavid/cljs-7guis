@@ -5,7 +5,7 @@
   (let [cnt (r/atom 0)]
     (fn []
       [:div
-       {:class ["max-w-xs" "flex" "flex-col" "items-center"]}
+       {:class ["card" "max-w-xs" "flex" "flex-col" "items-center"]}
        [:div
         {:class ["text-9xl" "mb-8"]}
         (str @cnt)]
