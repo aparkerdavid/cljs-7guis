@@ -1,6 +1,10 @@
 @tailwind base;
 @tailwind components;
 
+body {
+  background-color: white;
+}
+
 ::selection {
   @apply bg-blue-600 text-white;
 }
@@ -10,7 +14,12 @@ select::-ms-expand {
 }
 
 .flow > * + * {
-  @apply border-2 border-gray-900 mt-16 p-8 mx-auto;
+  @apply border-2
+   border-gray-900
+    bg-white 
+    mt-16
+     p-8
+      mx-auto;
 }
 
 input {

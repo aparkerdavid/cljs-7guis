@@ -306,7 +306,7 @@
           (reset! editing-formula (-> e .-target .-value)))}])))
 
 
-(defn spreadsheet []
+(defn spreadsheet [back-fn]
   [:div
    {:class ["p-0" "h-screen"]}
 
@@ -316,9 +316,25 @@
      {:class "relative"}
      [:thead
       [:tr
+       [:td 
+        {:class ["bg-green-600"
+                 "h-10"
+                 "z-20"
+                 "w-full"
+                 "fixed"
+                 "top-0"]} 
+        [:button
+         {:class ["text-white"
+                  "bg-transparent"
+                  "border-none"
+                  "w-24"
+                  "hover:bg-green-500"]
+          :on-click back-fn}
+         "← Back"]]]
+      [:tr
        [:th
         {:class ["sticky"
-                 "top-0"
+                 "top-10"
                  "z-20"]}
         [:div
          {:class ["border-2" "border-gray-600" "bg-gray-100" "h-12" "w-24"]
@@ -326,11 +342,12 @@
          ""]]
        (for [letter cell-letters-range]
          [:th {:key letter
-               :class ["sticky" "top-0" "z-20"]}
+               :class ["sticky" "top-10" "z-20"]}
           [:div {:class
                  ["border-2" "border-gray-600" "bg-gray-100" "h-12" "w-24" "p-2" "uppercase"]
                  :style {:margin "-2px"}} letter]])]]
      [:tbody
+      [:tr {:class ["h-10"]}]
       (for [number cell-numbers-range]
         [:tr
          {:key number}
