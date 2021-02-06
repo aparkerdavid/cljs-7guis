@@ -326,6 +326,7 @@
                   "bg-blue-600"
                   "border-blue-600"
                   "hover:bg-blue-500"
+                  "hover:border-blue-500"
                   "text-white"
                   "h-12"
                   "w-24"]
