@@ -7,7 +7,6 @@
  {:port 9000}
  :dependencies
  [[cider/cider-nrepl "LATEST"]
-  [borkdude/sci "0.2.1"]
   [reagent "1.0.0-rc1"]]
 
  :builds
