@@ -24,19 +24,21 @@
 
 (defn create-circle
   "Add a circle  at the specified X and Y coordinates.
-   This  adds a delete op to the undo queue and clears the redo queue."
+   This adds a delete op to the undo queue."
   [state x y]
   (-> state
       (update :circles #(conj % {:x x :y y :r 50}))
-      (update :undo-queue #(conj % :delete-last))
-      (assoc :redo-queue [])))
+      (update :undo-queue #(conj % :delete-last))))
 
 
 (defn create-circle-at-mouse
-  "Create a circle at the current location of the mouse pointer."
+  "Create a circle at the current location of the mouse pointer.
+   This clears the redo queue."
   [state]
   (let [[mouse-x mouse-y] (:mouse-pos state)]
-    (create-circle state mouse-x mouse-y)))
+    (-> state
+        (create-circle mouse-x mouse-y)
+        (assoc :redo-queue []))))
 
 
 (defn distance
@@ -72,13 +74,13 @@
 
 (defn resize-circle
   "Change the radius of a given circle.
-   This adds a resize op to the undo queue and clears the redo queue."
+   This adds a resize op to the undo queue."
   [state idx r]
   (let [old-r (-> state :circles (nth idx) :r)]
     (-> state
         (assoc-in [:circles idx :r] r)
-        (update :undo-queue #(conj % {:idx idx :r old-r}))
-        (assoc :redo-queue []))))
+        (update :undo-queue #(conj % {:idx idx :r old-r})))))
+
 
 
 (defn edit-circle-at-mouse
@@ -97,12 +99,14 @@
 
 
 (defn edit-circle-commit
-  "If editing a circle, commit the change and stop editing"
+  "If editing a circle, commit the change and stop editing.
+   This clears the redo queue."
   [state]
   (let [idx (-> state :editing-circle :idx)
         r (-> state :editing-circle :r)]
     (-> state
         (resize-circle idx r)
+        (assoc :redo-queue [])
         (edit-circle-stop))))
 
 
@@ -131,12 +135,14 @@
    This removes the last item from the redo queue, add a corresponding item to the undo queue."
   [state]
   (let [op (-> state :redo-queue last)]
-    (cond
-      (:x op) ;; A Create op will have an :x key
-      (create-circle state (:x op) (:y op))
-      (:r op) ;; A Resize op will have an :r key
-      (resize-circle state (:idx op) (:r op))
-      :else state)))
+    (->
+     (cond
+       (:x op) ;; A Create op will have an :x key
+       (create-circle state (:x op) (:y op))
+       (:r op) ;; A Resize op will have an :r key
+       (resize-circle state (:idx op) (:r op))
+       :else state)
+     (update :redo-queue pop))))
 
 
 (defn draw-circle!
