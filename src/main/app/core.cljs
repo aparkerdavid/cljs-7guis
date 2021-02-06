@@ -20,7 +20,7 @@
       (if @spreadsheet-visible
         [spreadsheet (fn [_] (reset! spreadsheet-loading false) (reset! spreadsheet-visible false))]
         [:div
-         [:div {:class ["my-12"  "text-center"]}
+         [:div {:class ["my-12" "max-w-prose" "mx-auto"]}
           [:h1 {:class ["mb-2"]}
            "7 GUIs"]
           [:span "in ClojureScript"]]
@@ -30,7 +30,8 @@
           [counter]]
          [block
           "Temperature Converter"
-          "Once again, fairly simple."
+          "The incremental update only fires when the input is a valid float;
+           This prevents flashes of NaN when an input is empty, or while entering a number with a decimal point."
           [temperature-converter]]
          [block
           "Flight Booker"
@@ -38,7 +39,7 @@
            [:p
             "Each input box accepts a date in YYYY-MM-DD format."]
            [:p
-            "Incremental validation attempts to show a red box only when the input is known to be invalid rather than just incomplete."]
+            "Input is validated incrementally. Input boxes turn red when an invalid input is believed to be incorrect rather than just incomplete."]
            [:p
             "It would obviously be better to use date pickers here,
               but that might defeat the purpose of the exercise."]]
@@ -49,7 +50,7 @@
           [timer]]
          [block
           "CRUD"
-          "Once again, fairly simple. Collapses to a single-column layout on mobile."
+          "Collapses to a single-column layout on mobile."
           [crud]]
          [block
           "Circles"
@@ -57,7 +58,7 @@
            [:p
             "The prompt calls for the circle size adjustment to appear in a popup window, but that's a bad idea.
              An alert might be close to the original intent, 
-             but it makes more sense to repurpose the same control area that contains Undo and Redo"]
+             but it makes more sense to repurpose the existing Undo/Redo control area."]
            [:p
             "It also calls for the circles to be drawn unfilled,
              but I think it's a more interesting exercise if they're filled white,
@@ -84,12 +85,12 @@
 
            [:p "The supported operations are: " [:code "+ - * / ** ROOT SQRT AVG"]]
            [:p "Cell references are case-insensitive,
-                function calls are only case-sensitive in the leading position.
+                function invocations are only case-sensitive in the leading position.
                 This requirement enables the spreadsheet to distinguish between e.g.
-                a call to the AVG function from a label with the value 'Avg.'"]
+                an invocation of the AVG function and a label with the value 'Avg.'"]
 
            [:p "Cells are color-coded by value type.
-                Hand-entered numbers are purple,
+                Literal numbers are purple,
                 calculated numbers are yellow,
                 labels are green,
                 and calculation errors are red."]
@@ -97,7 +98,7 @@
             "The spreadsheet works best in full-screen, both in terms of design and implementation. 
            (The latter due to the vagaries of sticky positioning inside an overflow container.)"]
            [:p
-            "Click here to load the spreadsheet."]]
+            "Click here to load the spreadsheet:"]]
 
           [:button
            {:class ["w-72"
