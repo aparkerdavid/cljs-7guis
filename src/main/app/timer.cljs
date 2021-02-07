@@ -44,10 +44,8 @@
 (defn timer []
   [:div
    {:class ["card" "max-w-xs"]}
-   [:input ;; A disabled input slider serves as our elapsed time readout.
+   [:progress
     {:class ["w-full"]
-     :type "range"
-     :disabled true
      :min "0"
      :max "1000"
      :value (* 1000 (/ (@state :elapsed) (@state :limit)))}]

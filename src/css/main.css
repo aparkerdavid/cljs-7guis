@@ -20,6 +20,21 @@ p {
 ::selection {
   @apply bg-blue-600 text-white;
 }
+progress::-webkit-progress-bar {
+  @apply bg-gray-100;
+}
+
+progress::-moz-progress-bar {
+  @apply bg-green-600;
+}
+
+progress {
+  @apply bg-gray-100 text-green-600;
+}
+
+progress::-webkit-progress-value {
+  @apply bg-green-600;
+}
 
 select::-ms-expand {
   display: none;
