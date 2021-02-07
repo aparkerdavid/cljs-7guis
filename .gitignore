@@ -19,7 +19,7 @@ pom.xml.asc
 
 .hgignore
 .hg/
-.calva/*
+.calva/
 .clj-kondo/*
 .lsp
 .vscode/*
