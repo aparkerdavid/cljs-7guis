@@ -73,7 +73,32 @@
 (def cell-reference-re #"([A-Z]|[a-z])[1-9][0-9]?((?=[\ ,\)])|$)")
 
 
-(defn eval-formula
+(def ops-table {:+ +
+                     :- -
+                     :/ /
+                     :* *
+                     :** js/Math.pow
+                     :sqrt js/Math.sqrt
+                     :root root
+                     :avg avg})
+
+
+(def lowercase-keyword
+  "Convert an expr to a lowercase keyword.
+   e.g. A1 => :a1"
+  (comp keyword string/lower-case str))
+
+
+(defn get-ref-value
+  "Given a string"
+  [str state]
+  (-> str
+      lowercase-keyword
+      state
+      :value))
+
+
+(defn eval-formula-expr
   "Evaluate an expression using a limited subset of Clojure.
 
    First, construct a lookup table consisting of:
@@ -82,75 +107,39 @@
    
    To evaluate an expression:
    - If the expression is a number, leave it be.
-   - If the expression is a symbol, replace it with the matching value in the lookup table.
+   - If the expression is a symbol, check if it is a legal cell reference.
+     If so, replace it with the matching value in the state map.
+     Otherwise, 
    - If the expression is a list:
      - Evaluate each item in the list.
      - Apply the first list item as a function to the rest of the list items.
    "
   [expr state]
-  (let [sym->kw (comp keyword string/lower-case str)
-        lookup (fn [sym]
-                ((sym->kw sym)
-                 (conj 
-                  {:+ +
-                   :- -
-                   :/ /
-                   :* *
-                   :** js/Math.pow
-                   :sqrt js/Math.sqrt
-                   :root root
-                   :avg avg}
-                  (into {} (map (fn [[k v]] [k (:value v)]) state)))))]
-    (cond
-      (number? expr) expr
-      (symbol? expr) (lookup expr)
-      (list? expr) (apply (eval-formula (first expr) state) (map #(eval-formula % state) (rest expr))))))
+  (js/parseFloat
+   (let [state-table (into {} (map (fn [[k v]] [k (:value v)]) state))
 
+         op-lookup (fn [sym]
+                     (or
+                      (-> sym
+                          lowercase-keyword
+                          ops-table)
+                      str))
+         state-lookup (fn [sym]
+                        (if (re-matches cell-reference-re (str sym))
+                          ((lowercase-keyword sym) state-table)
+                          :false))]
 
-(defn eval-formula-str
-  "Evaluate a formula (defined as a string) given the provided state map.
-   Returns a map containing :value and :kind keys.
-   :kind will be used to color-code cells with input.
+     (cond
+       (number? expr) expr
+       (symbol? expr) (state-lookup expr)
+       (list? expr) (apply (-> expr first op-lookup) (map #(eval-formula-expr % state) (rest expr)))))))
+    
 
-   To evaluate a formula-str:
-   - First, check if it's empty. If so, :kind and :value are nil.
-   - Otherwise, check if it starts with one of the supported operations..
-     - If so, it should be evaluated as a function: 
-     - First, expand all ranges.
-     - Then, add leading and trailing parentheses.
-     - Finally, read in as a list and evaluate.
-     - :value will be the result of evaluation, :kind will be :derived.
-   - Otherwise, check if it can be parsed as a number.
-     If so, :value will be the parsed number, and :kind will be :number.
-   - Otherwise, :value will be the unmodified string, and :kind will be :label.
-   "
-  [formula-str state]
-  (cond
-    ;; If formula-str is empty:
-    (empty? formula-str)
-    {:kind nil
-     :value nil}
-    ;; If formula-str looks like a function:
-    (some true? (map #(string/starts-with? formula-str %) supported-ops))
-    (try
-      (as-> formula-str s
-        (string/replace s cell-range-re #(-> % first expand-range))
-        (str "(" s ")")
-        (reader/read-string s)
-        (eval-formula s state)
-
-        {:kind :derived
-         :value s})
-      (catch js/Error _
-        {:kind :invalid
-         :value formula-str}))
-    ;; If formula-str can be parsed as a number:
-    (-> formula-str js/parseFloat js/isNaN not)
-    {:kind :number
-     :value (js/parseFloat formula-str)}
-    :else
-    {:kind :label
-     :value formula-str}))
+(defn eval-formula
+  [formula-expr state]
+  (let [result (eval-formula-expr formula-expr state)]
+    (when ((complement js/isNaN) result)
+      result)))
 
 
 (defn get-references
@@ -187,6 +176,60 @@
                         (into #{}))))))
 
 
+(defn eval-formula-str
+  "Evaluate a formula (defined as a string) given the provided state map.
+   Returns a map containing :value and :kind keys.
+   :kind will be used to color-code cells with input.
+
+   To evaluate a formula-str:
+   - First, check if it's empty. If so, :kind and :value are nil.
+   - Otherwise, check if it starts with one of the supported operations..
+     - If so, it should be evaluated as a function: 
+     - First, expand all ranges.
+     - Then, add leading and trailing parentheses.
+     - Finally, read in as a list and evaluate.
+     - :value will be the result of evaluation, :kind will be :derived.
+   - Otherwise, check if it can be parsed as a number.
+     If so, :value will be the parsed number, and :kind will be :number.
+   - Otherwise, :value will be the unmodified string, and :kind will be :label.
+   "
+  [formula-str cell-id state]
+  (cond
+    ;; If formula-str is empty:
+    (empty? formula-str)
+    {:kind nil
+     :value nil}
+    
+    ;; If formula-str contains a circular reference:
+    ((complement non-cyclical?) cell-id formula-str state)
+    {:kind :error
+     :value formula-str}
+    
+    ;; If formula-str looks like a function:
+    (some true? (map #(string/starts-with? formula-str %) supported-ops))
+    (let [eval-result 
+          (try
+            (as-> formula-str s
+              (string/replace s cell-range-re #(-> % first expand-range))
+              (str "(" s ")")
+              (reader/read-string s)
+              (eval-formula s state))
+            (catch js/Error _ nil))]
+      (if
+       eval-result
+       {:kind :derived
+        :value eval-result}
+       {:kind :error
+        :value formula-str}))
+    ;; If formula-str can be parsed as a number:
+    (-> formula-str js/parseFloat js/isNaN not)
+    {:kind :number
+     :value (js/parseFloat formula-str)}
+    :else
+    {:kind :label
+     :value formula-str}))
+
+
 (defn add-child
   "Given two cells 'cell-id' and 'child-id', register child-id as a Child of cell-id."
   [state child-id cell-id]
@@ -204,7 +247,7 @@
   "Set the value of a given cell to the result of the evaluation of its formula."
   [state cell-id]
   (update state cell-id
-          #(conj % (-> state cell-id :formula (eval-formula-str state)))))
+          #(conj % (-> state cell-id :formula (eval-formula-str cell-id state)))))
 
 
 (defn update-values
@@ -244,6 +287,7 @@
                (if (visited current) sorted (conj sorted current)))))))
 
 
+
 (defn update-formula
   "Change the formula associated with the a given cell. Update it and its children.
 
@@ -255,7 +299,9 @@
         (apply comp
                (for [parent old-parents]
                  #(remove-child % cell-id parent)))
-        new-parents (get-references formula-str)
+        new-parents (if (non-cyclical? cell-id formula-str state)
+                      (get-references formula-str)
+                      [])
         add-new-children
         (apply comp
                (for [parent new-parents]
@@ -265,12 +311,13 @@
         add-new-children
         (assoc-in [cell-id :formula] formula-str)
         (update-value-chain cell-id))))
-
+  
 
 (defn cell-field [cell-id]
-  (let [editing-formula (r/atom nil)
+  (let [draft-formula (r/atom nil)
         cell-value (r/cursor state [cell-id :value])
-        cell-kind (r/cursor state [cell-id :kind])]
+        cell-kind (r/cursor state [cell-id :kind])
+        cell-formula (r/cursor state [cell-id :formula])]
     (fn []
       [:input
        {:type "text"
@@ -280,12 +327,12 @@
                   :label "bg-green-100"
                   :number "bg-purple-100"
                   :derived "bg-yellow-100"
-                  :invalid "bg-red-100"
+                  :error "bg-red-100"
                   nil)]
         :style {:position "relative"
                 :margin "-1px"}
 
-        :value (or @editing-formula @cell-value)
+        :value (or @draft-formula @cell-value)
 
         :on-key-press
         (fn [e]
@@ -293,17 +340,16 @@
             (.. js/document -activeElement blur)))
 
         :on-focus
-        #(reset! editing-formula (deref (r/cursor state [cell-id :formula])))
+        #(reset! draft-formula @cell-formula)
 
         :on-blur
-        #(when (non-cyclical? cell-id @editing-formula @state)
-           (swap! state (partial update-formula cell-id @editing-formula))
-           (println @state)
-           (reset! editing-formula nil))
+        (fn [_]
+          (swap! state #(update-formula cell-id @draft-formula %))
+          (reset! draft-formula nil))
 
         :on-change
         (fn [e]
-          (reset! editing-formula (-> e .-target .-value)))}])))
+          (reset! draft-formula (-> e .-target .-value)))}])))
 
 
 (defn spreadsheet [back-fn]
