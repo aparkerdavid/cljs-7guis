@@ -233,7 +233,7 @@
 (defn add-child
   "Given two cells 'cell-id' and 'child-id', register child-id as a Child of cell-id."
   [state child-id cell-id]
-  (update-in state [cell-id :children] #(into [] (conj % child-id))))
+  (update-in state [cell-id :children] #(into #{} (conj % child-id))))
 
 
 (defn remove-child

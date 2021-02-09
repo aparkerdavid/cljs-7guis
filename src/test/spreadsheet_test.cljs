@@ -30,7 +30,7 @@
 (deftest add-child
   (testing "Add a child"
     (is (= (spreadsheet/add-child {} :b1 :a1)
-           {:a1 {:children [:b1]}}))))
+           {:a1 {:children #{:b1}}}))))
 
 (deftest remove-child
   (testing "Remove a child"
@@ -119,15 +119,15 @@
   (testing "Add a formula with a dependency"
     (is (= (spreadsheet/update-formula
             :b1 "+ a1 2" {:a1 {:value 2 :formula "2"}})
-           {:a1 {:value 2 :formula "2" :children [:b1]}
+           {:a1 {:value 2 :formula "2" :children #{:b1}}
             :b1 {:value 4 :formula "+ a1 2" :kind :derived}})))
 
   (testing "Update a formula with a child"
     (is (= (spreadsheet/update-formula
             :a1 "4"
-            {:a1 {:value 2 :formula "2" :children [:b1]}
+            {:a1 {:value 2 :formula "2" :children #{:b1}}
              :b1 {:value 4 :formula "+ a1 2"}})
-           {:a1 {:value 4 :formula "4" :children [:b1] :kind :number}
+           {:a1 {:value 4 :formula "4" :children #{:b1} :kind :number}
             :b1 {:value 6 :formula "+ a1 2" :kind :derived}}))))
 
 
