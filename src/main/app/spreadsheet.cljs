@@ -382,19 +382,7 @@
                  "top-0"
                  "left-0"
                  "z-30"]}
-        [:button
-         {:class ["border-2"
-                  "bg-blue-600"
-                  "border-blue-600"
-                  "hover:bg-blue-500"
-                  "hover:border-blue-500"
-                  "text-white"
-                  "h-12"
-                  "w-24"]
-          :style {:margin "-2px"}
-          :on-click back-fn}
-          
-         "← Back"]]
+        ]
          
           
        (for [letter cell-letters-range]
