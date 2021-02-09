@@ -161,7 +161,7 @@
     (catch js/Error _ nil)))
 
 
-(defn non-cyclical?
+(defn cyclical?
   "Check if a formula would cause a cyclical reference if it were assigned to a given cell.
 
   First, find the parents of the formula in question.
@@ -173,8 +173,8 @@
   [cell-id formula-str state]
   (loop [current-batch (into #{} (get-references formula-str))]
     (cond
-      (current-batch cell-id) false
-      (empty? current-batch) true
+      (current-batch cell-id) true
+      (empty? current-batch) false
       :else (recur (->> current-batch
                         (map #(-> state % :formula))
                         (map get-references)
@@ -208,12 +208,12 @@
      :value nil}
     
     ;; If formula-str contains a circular reference:
-    ((complement non-cyclical?) cell-id formula-str state)
+    (cyclical? cell-id formula-str state)
     {:kind :error
      :value formula-str}
     
     ;; If formula-str looks like a function:
-    (some true? (map #(string/starts-with? formula-str %) supported-ops))
+    (some true? (map #(string/starts-with? (string/lower-case formula-str) %) supported-ops))
     (let [eval-result 
           (try
             (as-> formula-str s
