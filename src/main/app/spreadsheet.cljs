@@ -64,7 +64,6 @@
       range-str)))
 
 
-(def supported-ops #{"+ " "- " "/ " "* " "** " "SQRT " "ROOT " "AVG "})
 
 
 (def cell-range-re #"([A-Z]|[a-z])[1-9][0-9]?-([A-Z]|[a-z])[1-9][0-9]?")
@@ -207,7 +206,16 @@
     {:kind nil
      :value nil}
     
-    ;; If formula-str contains a circular reference:
+    ;; If formula-str references an errored cell:
+    (->> formula-str
+         (get-references)
+         (map state)
+         (map :kind)
+         (some #(= :error %)))
+    {:kind :error
+     :value formula-str}
+
+    ;; If formula-str contains a cyclical reference 
     (cyclical? cell-id formula-str state)
     {:kind :error
      :value formula-str}
@@ -278,6 +286,7 @@
                  current
                  :children
                  (filter (complement visited))
+                 (filter (complement (into #{} to-visit)))
                  not-empty))]
       (cond
         (empty? to-visit)
@@ -306,9 +315,8 @@
         (apply comp
                (for [parent old-parents]
                  #(remove-child % cell-id parent)))
-        new-parents (if (non-cyclical? cell-id formula-str state)
-                      (get-references formula-str)
-                      [])
+        new-parents (get-references formula-str)
+
         add-new-children
         (apply comp
                (for [parent new-parents]
@@ -318,7 +326,7 @@
         add-new-children
         (assoc-in [cell-id :formula] formula-str)
         (update-value-chain cell-id))))
-  
+
 
 (defn cell-field [cell-id]
   (let [draft-formula (r/atom nil)

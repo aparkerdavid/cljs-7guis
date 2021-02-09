@@ -9,23 +9,23 @@
   (is (= (spreadsheet/get-references "foo bar") '())))
 
 
-(deftest non-cyclical?
-  (is (not (spreadsheet/non-cyclical?
-            :a1
-            "+ a1 1"
-            {})))
+(deftest cyclical?
+  (is  (spreadsheet/cyclical?
+        :a1
+        "+ a1 1"
+        {}))
   (testing "A non-cyclical input"
 
-    (is (spreadsheet/non-cyclical?
-         :c3
-         "+ h1 b5"
-         {:a1 {:formula "+ b1 a2"} :b1 {:formula "+ b2 c3"}})))
+    (is (not  (spreadsheet/cyclical?
+               :c3
+               "+ h1 b5"
+               {:a1 {:formula "+ b1 a2"} :b1 {:formula "+ b2 c3"}}))))
   (testing "a cyclical input"
-    (is (not
-         (spreadsheet/non-cyclical?
-          :a1
-          "+ a1 b1"
-          {:a1 {:formula "+ b1 a2"} :b1 {:formula "+ b2 c3"}})))))
+    (is
+     (spreadsheet/cyclical?
+      :a1
+      "+ a1 b1"
+      {:a1 {:formula "+ b1 a2"} :b1 {:formula "+ b2 c3"}}))))
 
 (deftest add-child
   (testing "Add a child"
