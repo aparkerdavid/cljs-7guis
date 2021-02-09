@@ -78,9 +78,9 @@
                 :/ /
                 :* *
                 :** js/Math.pow
-                     :sqrt js/Math.sqrt
-                     :root root
-                     :avg avg})
+                :=sqrt js/Math.sqrt
+                :=root root
+                :=avg avg})
 
 (def supported-ops 
   (->> ops-table
