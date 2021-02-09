@@ -8,6 +8,31 @@
                         :validity nil}))
 
 
+(def partial-date-re
+  "Matches a date at any stage of completion, if the formatting is correct so far."
+  #"^(?:[0-9]|$){4}(?:-|$)(?:[0-1]|$)(?:[0-9]|$)(?:-|$)(?:[0-3]|$)(?:[0-9]|$)")
+
+
+(def chunk-date-re
+  "Matches a date with no partially-completed fields, but that is not necessarily complete.
+   e.g. 2021, 2021-10, 2021-10-10, 
+   but not 202, 2021-1, or 2021-10-1"
+  #"^[0-9]{4}(-[0-9]{2}|$)?(-[0-9]{2}|$)?")
+
+
+(def complete-date-re
+  "Matches a complete date"
+  #"^[0-9]{4}-[0-1][0-9]-[0-3][0-9]$")
+
+
+(defn past-date?
+  "Given a valid date, return true if it is in the past."
+  [date-str]
+  (and (re-matches complete-date-re date-str)
+       (< (.parse js/Date date-str)
+          (js/Date.now))))
+
+
 (defn validate-date-str
   "Check if a string 's' resolves to a valid date.
    Because input is handled as it is typed, we distinguish between invalid and incomplete results.
@@ -16,14 +41,24 @@
   [date-str]
   (let [js-date (js/Date. date-str)]
     (cond
-       ;; Check for invalid year, day, or month numeric value
-      (and (re-matches #"^[0-9]{4}(-[0-9]{2}|$)?(-[0-9]{2}|$)?" date-str)
+       ;; Check for invalid year, day, or month value
+      (and (re-matches chunk-date-re date-str)
            (some js/Number.isNaN [(.getMonth js-date) (.getDay js-date) (.getYear js-date)]))
       :invalid
-       ;; Check for invalid formatting
-      (not (re-matches #"^(?:[0-9]|$){4}(?:-|$)(?:[0-1]|$)(?:[0-9]|$)(?:-|$)(?:[0-3]|$)(?:[0-9]|$)" date-str))
+
+       ;; Check for incorrect formatting
+      (not
+       (re-matches partial-date-re date-str))
       :invalid
-      (re-matches #"^[0-9]{4}-[0-1][0-9]-[0-3][0-9]$" date-str)
+
+      ;; Check for past date
+      (past-date? date-str)
+      :too-late
+
+      (re-matches complete-date-re date-str)
+      ;; Ensure the parsed date is the same as the entered date.
+      ;; e.g. February 29 will be parsed to March 1 if it is not a leap year.
+      ;; This is considered an invalid date.
       (if (= date-str
              (subs (.toISOString js-date) 0 10))
         :complete
@@ -36,15 +71,6 @@
   (and
    (= :complete (validate-date-str departure-date-str) (validate-date-str return-date-str))
    (> (js/Date. departure-date-str) (js/Date. return-date-str))))
-
-
-(defn past-date?
-  "Given a valid date, return true if it is in the past."
-  [date-str]
-  (and
-   (= :complete (validate-date-str date-str))
-   (< (.parse js/Date date-str)
-      (js/Date.now))))
 
 
 (defn check-validity
@@ -64,14 +90,14 @@
         return-date-status (validate-date-str return-date)]
     (cond
 
+      (or
+       (= :too-late departure-date-status)
+       (= :too-late return-date-status))
+      :too-late
+
       (or (= :invalid departure-date-status)
           (= :invalid return-date-status))
       :invalid-date
-
-      (or
-       (past-date? departure-date)
-       (past-date? return-date))
-      :too-late
 
       (time-traveling-date-pair? departure-date return-date)
       :time-travel
@@ -143,6 +169,7 @@
         :class
         (concat ["w-full"]
                 (case (validate-date-str @departure-date)
+                  :too-late ["invalid"]
                   :invalid ["invalid"]
                   :complete ["complete"]
                   nil))
@@ -162,6 +189,7 @@
         :class
         (concat ["w-full"]
                 (case (validate-date-str @return-date)
+                  :too-late ["invalid"]
                   :invalid ["invalid"]
                   :complete ["complete"]
                   nil))
