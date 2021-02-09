@@ -74,14 +74,20 @@
 
 
 (def ops-table {:+ +
-                     :- -
-                     :/ /
-                     :* *
-                     :** js/Math.pow
+                :- -
+                :/ /
+                :* *
+                :** js/Math.pow
                      :sqrt js/Math.sqrt
                      :root root
                      :avg avg})
 
+(def supported-ops 
+  (->> ops-table
+       keys
+       (map str)
+       (map #(subs % 1))
+       (into #{})))  
 
 (def lowercase-keyword
   "Convert an expr to a lowercase keyword.
@@ -125,7 +131,8 @@
                           ops-table)
                       str))
          state-lookup (fn [sym]
-                        (if (re-matches cell-reference-re (str sym))
+                        (if (and (re-matches cell-reference-re (str sym))
+                                 (-> state (lowercase-keyword sym) :kind (not= :error)))
                           ((lowercase-keyword sym) state-table)
                           :false))]
 
