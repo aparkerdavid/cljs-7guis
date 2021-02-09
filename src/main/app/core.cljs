@@ -140,7 +140,23 @@
 (defn page
   []
   (if @spreadsheet-visible
-    [spreadsheet (fn [_] (reset! spreadsheet-loading false) (reset! spreadsheet-visible false))]
+    [:div
+     [:button
+      {:class ["border-2"
+               "bg-blue-600"
+               "border-blue-600"
+               "hover:bg-blue-500"
+               "hover:border-blue-500"
+               "text-white"
+               "fixed"
+               "h-12"
+               "w-24"
+               "z-50"]
+       :style {:margin "-1px"}
+       :on-click (fn [_] (reset! spreadsheet-loading false) (reset! spreadsheet-visible false))}
+
+      "← Back"]
+     [spreadsheet]]
     [:div
      [:div {:class ["my-12" "max-w-prose" "mx-auto"]}
       [:h1 {:class ["mb-2"]}
