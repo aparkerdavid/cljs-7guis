@@ -272,12 +272,16 @@
     (update-fn state)))
 
 
+
+
+
 (defn update-value-chain
   "Update the values of a given cell and its descendents, in topological order via dfs."
   [state cell-id]
   (loop [to-visit [cell-id]
          visited #{}
-         sorted []]
+         sorted []
+         cyclical? false]
     (let [current
           (peek to-visit)
           unvisited-children
@@ -287,7 +291,13 @@
                  :children
                  (filter (complement visited))
                  (filter (complement (into #{} to-visit)))
-                 not-empty))]
+                 not-empty))
+          found-cyclical?
+          (when current
+            (->> state
+                 current
+                 :children
+                 (some (complement (into #{} to-visit)))))]
       (cond
         (empty? to-visit)
         (update-values state (reverse sorted))
@@ -295,13 +305,76 @@
         unvisited-children
         (recur (into to-visit unvisited-children)
                visited
-               sorted)
+               sorted
+               (or cyclical? found-cyclical?))
 
         :else
         (recur (pop to-visit)
                (conj visited current)
-               (if (visited current) sorted (conj sorted current)))))))
+               (if (visited current) sorted (conj sorted current))
+               (or cyclical? found-cyclical?))))))
 
+
+(defn build-value-chain
+  "Update the values of a given cell and its descendents, in topological order via dfs."
+  [state cell-id]
+  (loop [to-visit [cell-id]
+         visited #{}
+         sorted []
+         cyclical? false]
+    (let [current
+          (peek to-visit)
+          unvisited-children
+          (when current
+            (->> state
+                 current
+                 :children
+                 (filter (complement visited))
+                 (filter (complement (into #{} to-visit)))
+                 not-empty))
+          found-cyclical?
+          (when current
+            (->> state
+                 current
+                 :children
+                 (some (into #{} to-visit))))]
+      (cond
+        (and
+         cyclical?
+         (empty? to-visit))
+        [:cyclical sorted]
+
+        (empty? to-visit)
+        [:non-cyclical sorted]
+
+        unvisited-children
+        (recur (into to-visit unvisited-children)
+               visited
+               sorted
+               (or cyclical? found-cyclical?))
+
+        :else
+        (recur (pop to-visit)
+               (conj visited current)
+               (if (visited current) sorted (conj sorted current))
+               (or cyclical? found-cyclical?))))))
+
+
+(comment
+  
+  (build-value-chain {:a1 {:formula "+ 1 2" :children #{}}} :a1)
+
+  (build-value-chain {:a1 {:formula "+ 1 2" :children #{:b1}} :b1 {:formula "+ a1 2"}} :a1)
+
+  (build-value-chain {:a1 {:formula "+ :b1 2" :children #{:b1}} :b1 {:formula "+ a1 2" :children #{:a1}}} :a1)
+
+  (build-value-chain
+   {:a1 {:formula "1" :value 1 :children #{:b1 :c1}}
+    :b1 {:formula "+ a1 1"}
+    :c1 {:formula "+ a1 2"}}
+   :a1)
+
+  ,)
 
 
 (defn update-formula
@@ -381,10 +454,7 @@
         {:class ["sticky"
                  "top-0"
                  "left-0"
-                 "z-30"]}
-        ]
-         
-          
+                 "z-30"]}]
        (for [letter cell-letters-range]
          [:th {:key letter
                :class ["sticky" "top-0" "z-20"]}
