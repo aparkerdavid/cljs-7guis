@@ -66,8 +66,8 @@
   (testing "Update value with a circular reference"
     (is (= (-> (spreadsheet/update-value {:a1 {:formula "+ a1 1"}} :a1)
                :a1
-               :kind))
-        :error))
+               :kind)
+           :error)))
 
   (testing "Update multiple values in order"
     (is (= {:a1 {:value 4, :formula "+ 1 3", :kind :derived :children [:b1]}
