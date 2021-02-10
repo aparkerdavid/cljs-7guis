@@ -78,6 +78,32 @@
             [:a1 :b1])))))
 
 
+(deftest build-value-chain
+  (let [build-value-chain build-value-chain]
+    (testing "No references"
+      (is (= (build-value-chain {:a1 {:formula "+ 1 2" :children #{}}} :a1)
+             [:non-cyclical [:a1]])))
+    (testing "Single reference"
+      (is (= (build-value-chain {:a1 {:formula "+ 1 2" :children #{:b1}} :b1 {:formula "+ a1 2"}} :a1)
+             [:non-cyclical [:b1 :a1]])))
+    (testing "Multiple references"
+      (is (= (build-value-chain
+              {:a1 {:formula "1" :value 1 :children #{:b1 :c1}}
+               :b1 {:formula "+ a1 1"}
+               :c1 {:formula "+ a1 2"}}
+              :a1)
+             [:non-cyclical [:c1 :b1 :a1]])))
+    (testing "Chained references")
+    (testing "Cyclical reference"
+      (is
+       (=
+        (build-value-chain
+         {:a1 {:formula "+ :b1 2" :children #{:b1}}
+          :b1 {:formula "+ a1 2" :children #{:a1}}}
+         :a1)
+        [:cyclical [:b1 :a1]])))))
+
+
 (deftest update-value-chain
 
   (testing "Update a value chain"
@@ -103,6 +129,7 @@
             {:a1 {:value 6 :formula "+ 1 3" :children [:b1]}
              :b1 {:value 1 :formula "+ a1 5"}}
             :a1)))))
+
 
 (deftest update-formula
 
