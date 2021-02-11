@@ -38,7 +38,7 @@
     [:p
      "Each input box accepts a date in YYYY-MM-DD format."]
     [:p
-     "Input is validated incrementally. Input boxes turn red when an invalid input is believed to be incorrect rather than just incomplete."]
+     "Input is validated incrementally. Input boxes turn red when an invalid input is incorrect rather than just incomplete."]
     [:p
      "It would obviously be better to use date pickers here,
               but that might defeat the purpose of the exercise."]]

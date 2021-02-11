@@ -36,8 +36,8 @@
 (defn validate-date-str
   "Check if a string 's' resolves to a valid date.
    Because input is handled as it is typed, we distinguish between invalid and incomplete results.
-   The user's input will technically be invalid until it is done.
-   We want to avoid telling the user they're 'doing it wrong' unless we think there's been a mistake."
+   The user's input will not be considered complete until it is done,
+   but we want to avoid telling the user they're 'doing it wrong' unless they've really made a mistake."
   [date-str]
   (let [js-date (js/Date. date-str)]
     (cond
@@ -73,7 +73,7 @@
    (> (js/Date. departure-date-str) (js/Date. return-date-str))))
 
 
-(defn check-validity
+(defn validate-date-pair
   "Given the current state, determine the validity of inputs.
    May be:
    - :invalid-date
@@ -110,7 +110,7 @@
 
 (defn update-validity!
   []
-  (swap! state assoc :validity (check-validity @state)))
+  (swap! state assoc :validity (validate-date-pair @state)))
 
 
 (defn success!
