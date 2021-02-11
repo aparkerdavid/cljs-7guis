@@ -160,28 +160,6 @@
     (catch js/Error _ nil)))
 
 
-(defn cyclical?
-  "Check if a formula would cause a cyclical reference if it were assigned to a given cell.
-
-  First, find the parents of the formula in question.
-  If there aren't any, return true. (Can't have a cyclical reference without any references)
-  Otherwise: check if the cell in question is among the parents.
-  If so: we've found a cyclical reference, return false.
-  Otherwise: repeat the process with the combined set of the parents of each Parent.
-  Eventually, we will either find a cyclical reference or run out of ancestors to test."
-  [cell-id formula-str state]
-  (loop [current-batch (into #{} (get-references formula-str))]
-    (cond
-      (current-batch cell-id) true
-      (empty? current-batch) false
-      :else (recur (->> current-batch
-                        (map #(-> state % :formula))
-                        (map get-references)
-                        flatten
-                        (filter some?)
-                        (into #{}))))))
-
-
 (defn eval-formula-str
   "Evaluate a formula (defined as a string) given the provided state map.
    Returns a map containing :value and :kind keys.
@@ -199,7 +177,7 @@
      If so, :value will be the parsed number, and :kind will be :number.
    - Otherwise, :value will be the unmodified string, and :kind will be :label.
    "
-  [formula-str cell-id state]
+  [formula-str state]
   (cond
     ;; If formula-str is empty:
     (empty? formula-str)
@@ -212,11 +190,6 @@
          (map state)
          (map :kind)
          (some #(= :error %)))
-    {:kind :error
-     :value formula-str}
-
-    ;; If formula-str contains a cyclical reference 
-    (cyclical? cell-id formula-str state)
     {:kind :error
      :value formula-str}
     
@@ -262,20 +235,34 @@
   "Set the value of a given cell to the result of the evaluation of its formula."
   [state cell-id]
   (update state cell-id
-          #(conj % (-> state cell-id :formula (eval-formula-str cell-id state)))))
+          #(conj % (-> state cell-id :formula (eval-formula-str state)))))
 
 
 (defn update-values
-  "Update multiple values"
+  "Update multiple values.
+   Values will be updated in reverse order.
+   e.g. provided [:a1 :b1 :c1]: c1 will update, followed by b1, followed by a1."
   [state ids]
-  (let [update-fn (apply comp (for [id (reverse ids)] #(update-value % id)))]
-    (update-fn state)))
+  ((apply comp (for [id ids] #(update-value % id)))
+   state))
 
 
+(defn error-value
+  "Error out a given cell.
+   Its value will be set to its formula, and its kind will be set to :error."
+  [state id]
+  (let [formula (state id :formula)]
+    (-> state
+        (assoc-in [id :kind] :error)
+        (assoc-in [id :value] formula))))
+
+(defn error-values
+  [state ids]
+  ((apply comp (for [id ids] #(error-value % id)))
+   state))
 
 
-
-(defn update-value-chain
+(defn update-value-chain-old
   "Update the values of a given cell and its descendents, in topological order via dfs."
   [state cell-id]
   (loop [to-visit [cell-id]
@@ -330,22 +317,19 @@
                  current
                  :children
                  (filter (complement visited))
-                 (filter (complement (into #{} to-visit)))
+                 (filter #(not= cell-id %))
                  not-empty))
           found-cyclical?
           (when current
             (->> state
                  current
                  :children
-                 (some (into #{} to-visit))))]
+                 (some #(= % cell-id))))]
       (cond
-        (and
-         cyclical?
-         (empty? to-visit))
-        [:cyclical sorted]
-
+        
         (empty? to-visit)
-        [:non-cyclical sorted]
+        {:chain sorted
+         :cyclical cyclical?}
 
         unvisited-children
         (recur (into to-visit unvisited-children)
@@ -361,27 +345,74 @@
 
 
 (comment
-  
+
   (build-value-chain {:a1 {:formula "+ 1 2" :children #{}}} :a1)
 
   (build-value-chain {:a1 {:formula "+ 1 2" :children #{:b1}} :b1 {:formula "+ a1 2"}} :a1)
 
-  (build-value-chain {:a1 {:formula "+ :b1 2" :children #{:b1}} :b1 {:formula "+ a1 2" :children #{:a1}}} :a1)
+  (build-value-chain
+   {:a1 {:formula "+ :b1 2" :children #{:b1}}
+    :b1 {:formula "+ a1 2" :children #{:a1}}}
+   :a1)
 
   (build-value-chain
    {:a1 {:formula "1" :value 1 :children #{:b1 :c1}}
     :b1 {:formula "+ a1 1"}
     :c1 {:formula "+ a1 2"}}
    :a1)
-  
+
   (build-value-chain
    {:a1 {:formula "1" :children #{:b1 :d1}}
-    :b1 {:formula "+ a1 1" :children #{:c1}}
     :c1 {:formula "+ b1 1" :children #{:d1}}
+    :b1 {:formula "+ a1 1" :children #{:c1}}
     :d1 {:formula "+ a1 c1"}}
    :a1)
 
+
+  (build-value-chain
+   {:a1 {:formula "+ e1 1" :children #{:b1}}
+    :b1 {:formula "+ a1 1" :children #{:c1}}
+    :c1 {:formula "+ b1 1" :children #{:d1}}
+    :d1 {:formula "+ c1 1" :children #{:e1}}
+    :e1 {:formula "+ d1 1" :children #{:a1}}}
+   :a1)
+
+
+  (build-value-chain
+   {:a1 {:formula "+ e1 1" :children #{:b1}}
+    :b1 {:formula "+ a1 1" :children #{:c1}}
+    :c1 {:formula "+ b1 1" :children #{:d1}}
+    :d1 {:formula "+ c1 1" :children #{:e1}}
+    :e1 {:formula "+ d1 1" :children #{:a1}}}
+   :a1)
+
+  (build-value-chain
+   {:a1 {:value 4 :formula "+ 1 2" :children #{:b1}}
+    :b1 {:value 2 :formula "+ a1 2"}}
+   :a1))  
+
+  
+  
+
+   
+
+
+(defn update-value-chain
+  [state cell-id]
+  (let [{cyclical? :cyclical chain :chain} (build-value-chain state cell-id)]
+    (if cyclical?
+       (error-values state chain)
+       (update-values state chain))))
+   
+
+(comment
+  (update-value-chain
+   {:a1 {:value 4 :formula "+ 1 2" :children #{:b1}}
+    :b1 {:value 2 :formula "+ a1 2"}}
+   :a1)
+  
   ,)
+
 
 
 (defn update-formula
