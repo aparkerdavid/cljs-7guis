@@ -373,6 +373,13 @@
     :b1 {:formula "+ a1 1"}
     :c1 {:formula "+ a1 2"}}
    :a1)
+  
+  (build-value-chain
+   {:a1 {:formula "1" :children #{:b1 :d1}}
+    :b1 {:formula "+ a1 1" :children #{:c1}}
+    :c1 {:formula "+ b1 1" :children #{:d1}}
+    :d1 {:formula "+ a1 c1"}}
+   :a1)
 
   ,)
 

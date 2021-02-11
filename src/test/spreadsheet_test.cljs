@@ -79,7 +79,7 @@
 
 
 (deftest build-value-chain
-  (let [build-value-chain build-value-chain]
+  (let [build-value-chain spreadsheet/build-value-chain]
     (testing "No references"
       (is (= (build-value-chain {:a1 {:formula "+ 1 2" :children #{}}} :a1)
              [:non-cyclical [:a1]])))
@@ -93,7 +93,16 @@
                :c1 {:formula "+ a1 2"}}
               :a1)
              [:non-cyclical [:c1 :b1 :a1]])))
-    (testing "Chained references")
+    (testing "Chained references"
+      (is
+       (=
+        (build-value-chain
+         {:a1 {:formula "1" :children #{:b1 :d1}}
+          :b1 {:formula "+ a1 1" :children #{:c1}}
+          :c1 {:formula "+ b1 1" :children #{:d1}}
+          :d1 {:formula "+ a1 c1"}}
+         :a1)
+        [:non-cyclical :a1 :b1 :c1 :d1])))
     (testing "Cyclical reference"
       (is
        (=
