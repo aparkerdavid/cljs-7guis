@@ -152,11 +152,12 @@
   "Determine which cells are referenced in a formula."
   [formula-str]
   (try
-    (->> formula-str
-         (re-seq cell-reference-re)
-         (map first)
-         (map string/lower-case)
-         (map keyword))
+    (let [s (string/replace formula-str cell-range-re #(-> % first expand-range))]
+      (->> s
+           (re-seq cell-reference-re)
+           (map first)
+           (map string/lower-case)
+           (map keyword)))
     (catch js/Error _ nil)))
 
 
@@ -344,75 +345,12 @@
                (or cyclical? found-cyclical?))))))
 
 
-(comment
-
-  (build-value-chain {:a1 {:formula "+ 1 2" :children #{}}} :a1)
-
-  (build-value-chain {:a1 {:formula "+ 1 2" :children #{:b1}} :b1 {:formula "+ a1 2"}} :a1)
-
-  (build-value-chain
-   {:a1 {:formula "+ :b1 2" :children #{:b1}}
-    :b1 {:formula "+ a1 2" :children #{:a1}}}
-   :a1)
-
-  (build-value-chain
-   {:a1 {:formula "1" :value 1 :children #{:b1 :c1}}
-    :b1 {:formula "+ a1 1"}
-    :c1 {:formula "+ a1 2"}}
-   :a1)
-
-  (build-value-chain
-   {:a1 {:formula "1" :children #{:b1 :d1}}
-    :c1 {:formula "+ b1 1" :children #{:d1}}
-    :b1 {:formula "+ a1 1" :children #{:c1}}
-    :d1 {:formula "+ a1 c1"}}
-   :a1)
-
-
-  (build-value-chain
-   {:a1 {:formula "+ e1 1" :children #{:b1}}
-    :b1 {:formula "+ a1 1" :children #{:c1}}
-    :c1 {:formula "+ b1 1" :children #{:d1}}
-    :d1 {:formula "+ c1 1" :children #{:e1}}
-    :e1 {:formula "+ d1 1" :children #{:a1}}}
-   :a1)
-
-
-  (build-value-chain
-   {:a1 {:formula "+ e1 1" :children #{:b1}}
-    :b1 {:formula "+ a1 1" :children #{:c1}}
-    :c1 {:formula "+ b1 1" :children #{:d1}}
-    :d1 {:formula "+ c1 1" :children #{:e1}}
-    :e1 {:formula "+ d1 1" :children #{:a1}}}
-   :a1)
-
-  (build-value-chain
-   {:a1 {:value 4 :formula "+ 1 2" :children #{:b1}}
-    :b1 {:value 2 :formula "+ a1 2"}}
-   :a1))  
-
-  
-  
-
-   
-
-
 (defn update-value-chain
   [state cell-id]
   (let [{cyclical? :cyclical chain :chain} (build-value-chain state cell-id)]
     (if cyclical?
        (error-values state chain)
        (update-values state chain))))
-   
-
-(comment
-  (update-value-chain
-   {:a1 {:value 4 :formula "+ 1 2" :children #{:b1}}
-    :b1 {:value 2 :formula "+ a1 2"}}
-   :a1)
-  
-  ,)
-
 
 
 (defn update-formula
