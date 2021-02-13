@@ -25,19 +25,40 @@
   #"^[0-9]{4}-[0-1][0-9]-[0-3][0-9]$")
 
 
-(defn past-date?
-  "Given a valid date, return true if it is in the past."
+(defn date-completion-level
+  "Determine whether a date string is complete to the year, the month, or the day."
   [date-str]
-  (and (re-matches complete-date-re date-str)
-       (< (.parse js/Date date-str)
-          (js/Date.now))))
+  (let [len (count date-str)]
+    (cond
+      (< 3 len 7) :year
+      (< 6 len 10) :month
+      (< 9 len) :day)))
+
+
+(defn before?
+  "Determine if date-str-1 defines an earlier date than date-str-2.
+   date-str-2 must be complete.
+   date-str-1 may be partially complete."
+  [date-str-1 date-str-2]
+  (let [completion-level (date-completion-level date-str-1)]
+    (case completion-level
+      :year (<
+             (js/Date. (subs date-str-1 0 4))
+             (js/Date. (subs date-str-2 0 4)))
+      :month (<
+              (js/Date. (subs date-str-1 0 7))
+              (js/Date. (subs date-str-2 0 7)))
+      :day (<
+            (js/Date. date-str-1)
+            (js/Date. date-str-2))
+      false)))
 
 
 (defn validate-date-str
   "Check if a string 's' resolves to a valid date.
    Because input is handled as it is typed, we distinguish between invalid and incomplete results.
-   The user's input will technically be invalid until it is done.
-   We want to avoid telling the user they're 'doing it wrong' unless we think there's been a mistake."
+   The user's input will not be considered complete until it is done,
+   but we want to avoid telling the user they're 'doing it wrong' unless they've really made a mistake."
   [date-str]
   (let [js-date (js/Date. date-str)]
     (cond
@@ -52,12 +73,12 @@
       :invalid
 
       ;; Check for past date
-      (past-date? date-str)
+      (before? date-str (.toISOString (js/Date.)))
       :too-late
 
       (re-matches complete-date-re date-str)
       ;; Ensure the parsed date is the same as the entered date.
-      ;; e.g. February 29 will be parsed to March 1 if it is not a leap year.
+      ;; e.g. February 29 will be interpreted as March 1 if it is not a leap year.
       ;; This is considered an invalid date.
       (if (= date-str
              (subs (.toISOString js-date) 0 10))
@@ -65,21 +86,13 @@
         :invalid))))
 
 
-(defn time-traveling-date-pair?
-  "Given two valid dates, return true if the second date is earlier than the first."
-  [departure-date-str return-date-str]
-  (and
-   (= :complete (validate-date-str departure-date-str) (validate-date-str return-date-str))
-   (> (js/Date. departure-date-str) (js/Date. return-date-str))))
-
-
-(defn check-validity
+(defn validate-state
   "Given the current state, determine the validity of inputs.
    May be:
    - :invalid-date
    - :too-late
    - :time-travel
-   ... in the event of an error,
+   ... in the event of an error, or
    - :valid
    If the inputs are valid and ready to submit,
    nil otherwise."
@@ -99,7 +112,7 @@
           (= :invalid return-date-status))
       :invalid-date
 
-      (time-traveling-date-pair? departure-date return-date)
+      (before? return-date departure-date)
       :time-travel
 
       (and (= :complete departure-date-status)
@@ -110,7 +123,7 @@
 
 (defn update-validity!
   []
-  (swap! state assoc :validity (check-validity @state)))
+  (swap! state assoc :validity (validate-state @state)))
 
 
 (defn success!

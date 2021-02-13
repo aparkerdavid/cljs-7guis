@@ -191,7 +191,7 @@
        {:class ["max-w-sm" "block" "m-auto" "p-4"]
         :style {:margin "0 auto"}}
        (if @editing-circle
-         [:div
+         [:<>
           [:div
            {:class
             ["max-w-min" "block" "m-auto"]}
@@ -209,25 +209,25 @@
           [:div
            {:class ["flex" "flex-col" "sm:flex-row"]}
            [:button
-            {:class ["btn-red" "w-full"]
+            {:class ["btn-red" "my-1" "sm:mx-1" "w-full"]
              :on-click
              #(swap! state edit-circle-stop)}
             "Cancel"]
 
            [:button
-            {:class ["btn-green" "w-full"]
+            {:class ["btn-green" "my-1" "sm:mx-1" "w-full"]
              :on-click
              #(swap! state edit-circle-commit)}
             "Done"]]]
          [:div
-          {:class ["flex" "flex-col" "gap-2" "sm:flex-row"]}
+          {:class ["flex" "flex-col" "sm:flex-row"]}
           [:button
-           {:class ["btn-red" "w-full"]
+           {:class ["btn-red" "my-1" "sm:mx-1" "w-full"]
             :on-click
             #(swap! state undo)}
            "Undo"]
           [:button
-           {:class ["btn-blue" "w-full"]
+           {:class ["btn-blue" "my-1" "sm:mx-1" "w-full"]
             :on-click
             #(swap! state redo)}
            "Redo"]])])))
