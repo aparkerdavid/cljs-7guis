@@ -478,7 +478,7 @@
           (reset! draft-formula (-> e .-target .-value)))}])))
 
 
-(defn spreadsheet [back-fn]
+(defn spreadsheet []
   [:div
    {:class ["p-0" "h-screen"]}
 
