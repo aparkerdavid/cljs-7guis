@@ -11,7 +11,8 @@
     "build-css": "npx postcss-cli ./src/css/main.css -o ./resources/public/main.css",
     "watch-app": "npx shadow-cljs watch app test",
     "dev": "npm run watch-app && npm run watch-css",
-    "build-prod": "npx shadow-cljs release app && npm run build-css"
+    "build-prod": "npx shadow-cljs release app && npm run build-css",
+    "deploy": "npm run build-prod && npx netlify deploy --prod"
   },
   "dependencies": {
     "autoprefixer": "^10.1.0",
