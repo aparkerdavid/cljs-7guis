@@ -77,13 +77,14 @@
 
 
 (def spreadsheet-visible
-  "The spreadsheet id displayed in full screen. This atom tracks whether it is visible."
+  "The spreadsheet id displayed in full screen. 
+   This atom tracks whether the spreadsheet is visible."
   (r/atom false))
 
 
 (def spreadsheet-loading
   "The spreadsheet takes a second or two to load, so a loading indicator is provided.
-   This atom tracks whether it is visible"
+   This atom tracks whether the indicator is visible."
   (r/atom false))
 
 
