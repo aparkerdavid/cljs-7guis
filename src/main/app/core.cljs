@@ -67,7 +67,7 @@
    [:<>
     [:p
      "The prompt calls for the circle size adjustment to appear in a popup window, but that's a bad idea.
-             An alert might be close to the original intent, 
+             A modal would be close to the original intent, 
              but it makes more sense to repurpose the existing Undo/Redo control area."]
     [:p
      "It also calls for the circles to be drawn unfilled,
