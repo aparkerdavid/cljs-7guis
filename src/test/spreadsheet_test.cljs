@@ -4,9 +4,11 @@
 
 
 (deftest get-parents
-  (is (= (spreadsheet/get-references "+ a1 b1") '(:a1 :b1)))
-  (is (= (spreadsheet/get-references "+ 1 2") '()))
-  (is (= (spreadsheet/get-references "foo bar") '())))
+  (let [get-references spreadsheet/get-references]
+
+    (is (= (get-references "+ a1 b1") '(:a1 :b1)))
+    (is (= (get-references "+ 1 2") '()))
+    (is (= (get-references "foo bar") '()))))
 
 
 (deftest add-child
@@ -139,29 +141,32 @@
 
 (deftest update-formula
 
-  (testing "Add a formula"
-    (is (= (spreadsheet/update-formula
-            :a1 "2" {})
-           {:a1 {:value 2 :formula "2" :kind :number}})))
+  (let [update-formula spreadsheet/update-formula]
 
-  (testing "Alter an existing formula"
-    (is (= (spreadsheet/update-formula
-            :a1 "4" {:a1 {:value 2 :formula "2"}})
-           {:a1 {:value 4 :formula "4" :kind :number}})))
+    (testing "Add a formula"
+      (is (= (update-formula
+              :a1 "2" {})
+             {:a1 {:value 2 :formula "2" :kind :number}})))
 
-  (testing "Add a formula with a dependency"
-    (is (= (spreadsheet/update-formula
-            :b1 "+ a1 2" {:a1 {:value 2 :formula "2"}})
-           {:a1 {:value 2 :formula "2" :children #{:b1}}
-            :b1 {:value 4 :formula "+ a1 2" :kind :derived}})))
 
-  (testing "Update a formula with a child"
-    (is (= (spreadsheet/update-formula
-            :a1 "4"
-            {:a1 {:value 2 :formula "2" :children #{:b1}}
-             :b1 {:value 4 :formula "+ a1 2"}})
-           {:a1 {:value 4 :formula "4" :children #{:b1} :kind :number}
-            :b1 {:value 6 :formula "+ a1 2" :kind :derived}}))))
+    (testing "Alter an existing formula"
+      (is (= (update-formula
+              :a1 "4" {:a1 {:value 2 :formula "2"}})
+             {:a1 {:value 4 :formula "4" :kind :number}})))
+
+    (testing "Add a formula with a dependency"
+      (is (= (update-formula
+              :b1 "+ a1 2" {:a1 {:value 2 :formula "2"}})
+             {:a1 {:value 2 :formula "2" :children #{:b1}}
+              :b1 {:value 4 :formula "+ a1 2" :kind :derived}})))
+
+    (testing "Update a formula with a child"
+      (is (= (update-formula
+              :a1 "4"
+              {:a1 {:value 2 :formula "2" :children #{:b1}}
+               :b1 {:value 4 :formula "+ a1 2"}})
+             {:a1 {:value 4 :formula "4" :children #{:b1} :kind :number}
+              :b1 {:value 6 :formula "+ a1 2" :kind :derived}})))))
 
 
 (deftest eval-formula
