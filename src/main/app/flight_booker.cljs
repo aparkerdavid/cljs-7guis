@@ -49,8 +49,8 @@
               (js/Date. (subs date-str-1 0 7))
               (js/Date. (subs date-str-2 0 7)))
       :day (<
-            (js/Date. date-str-1)
-            (js/Date. date-str-2))
+            (js/Date. (subs date-str-1 0 10))
+            (js/Date. (subs date-str-2 0 10)))
       false)))
 
 
