@@ -152,12 +152,11 @@
   "Determine which cells are referenced in a formula."
   [formula-str]
   (try
-    (let [s (string/replace formula-str cell-range-re #(-> % first expand-range))]
-      (->> s
-           (re-seq cell-reference-re)
-           (map first)
-           (map string/lower-case)
-           (map keyword)))
+    (->> (string/replace formula-str cell-range-re #(-> % first expand-range))
+         (re-seq cell-reference-re)
+         (map first)
+         (map string/lower-case)
+         (map keyword))
     (catch js/Error _ nil)))
 
 
