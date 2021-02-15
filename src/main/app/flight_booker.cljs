@@ -56,9 +56,7 @@
 
 (defn validate-date-str
   "Check if a string 's' resolves to a valid date.
-   Because input is handled as it is typed, we distinguish between invalid and incomplete results.
-   The user's input will not be considered complete until it is done,
-   but we want to avoid telling the user they're 'doing it wrong' unless they've really made a mistake."
+   Because input is handled as it is typed, we distinguish between invalid and incomplete results."
   [date-str]
   (let [js-date (js/Date. date-str)]
     (cond

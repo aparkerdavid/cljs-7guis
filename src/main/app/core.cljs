@@ -25,7 +25,6 @@
   []
   [block
    "Counter"
-   "Press the button to increment."
    [counter]])
 
 
@@ -33,8 +32,6 @@
   []
   [block
    "Temperature Converter"
-   "The incremental update only fires when the input is a valid float;
-           This prevents flashes of NaN when an input is empty, or while entering a number with a decimal point."
    [temperature-converter]])
 
 
@@ -46,9 +43,10 @@
     [:p
      "Each input box accepts a date in YYYY-MM-DD format."]
     [:p
-     "Input is validated incrementally. Input boxes turn red when an invalid input is incorrect rather than just incomplete."]
+     "Input is validated incrementally, and input boxes turn red when an invalid input is incorrect rather than just incomplete. 
+      The goal is to avoid telling them they're 'doing it wrong' unless they've really made a mistake, in which case we want to let them know ASAP."]
     [:p
-     "It would obviously be better to use date pickers here,
+     "An even better solution would be to just use date pickers,
               but that might defeat the purpose of the exercise."]]
    [flight-booker]])
 
