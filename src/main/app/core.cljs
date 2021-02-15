@@ -7,7 +7,6 @@
    [app.crud :refer [crud]]
    [app.circles :refer [circles]]
    [app.spreadsheet :refer [spreadsheet]]
-   [app.layout :as layout :refer [block]]
    [reagent.core :as r]
    [reagent.dom :as rd]))
 
