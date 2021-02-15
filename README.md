@@ -1,6 +1,6 @@
 # 7 GUIs in ClojureScript
 
-7 GUIs, implemented in plain ClojureScript.
+7 GUIs, implemented in ClojureScript via Reagent.
 
 Try the live demo [here](https://stoic-franklin-71dc69.netlify.app).
 
