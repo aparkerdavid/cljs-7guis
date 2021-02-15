@@ -125,8 +125,9 @@
                 labels are green,
                 and calculation errors are red."]
     [:p
-     "The spreadsheet works best in full-screen, both in terms of design and implementation. 
-           (The latter due to the vagaries of sticky positioning inside an overflow container.)"]
+     "The spreadsheet takes up the full browser window. 
+      This is a better design than nesting it within the document flow, 
+      and avoids the pitfalls of sticky-positioned elements in an overflow container."]
     [:p
      "Click here to load the spreadsheet:"]]
 
