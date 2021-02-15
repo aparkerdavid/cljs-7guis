@@ -64,12 +64,16 @@
       range-str)))
 
 
+(def cell-reference-re
+  "Regex matching a cell reference.
+   e.g A1, b1, X13, g25"
+  #"([A-Z]|[a-z])[1-9][0-9]?((?=[\ ,\)])|$)")
 
 
-(def cell-range-re #"([A-Z]|[a-z])[1-9][0-9]?-([A-Z]|[a-z])[1-9][0-9]?")
-
-
-(def cell-reference-re #"([A-Z]|[a-z])[1-9][0-9]?((?=[\ ,\)])|$)")
+(def cell-range-re
+  "Regex matching cell ranges.
+   e.g. A1-C1, b2-b5"
+  #"([A-Z]|[a-z])[1-9][0-9]?-([A-Z]|[a-z])[1-9][0-9]?")
 
 
 (def ops-table {:+ +
@@ -82,6 +86,8 @@
                 :=avg avg})
 
 (def supported-ops 
+  "The set of supported operations, as strings.
+   e.g. '+', '**', '=avg'" 
   (->> ops-table
        keys
        (map str)
@@ -95,7 +101,7 @@
 
 
 (defn get-ref-value
-  "Given a string"
+  "Given a string, get the value of its associated cell."
   [str state]
   (-> str
       lowercase-keyword
@@ -142,6 +148,7 @@
     
 
 (defn eval-formula
+  "Evaluate a formula. In the case of a non-numeric result, return nil."
   [formula-expr state]
   (let [result (eval-formula-expr formula-expr state)]
     (when ((complement js/isNaN) result)
@@ -219,7 +226,7 @@
 
 
 (defn add-child
-  "Given two cells 'cell-id' and 'child-id', register child-id as a Child of cell-id."
+  "Given two cells 'cell-id' and 'child-id', register child-id as a child of cell-id."
   [state child-id cell-id]
   (update-in state [cell-id :children] #(into #{} (conj % child-id))))
 
@@ -241,7 +248,7 @@
 (defn update-values
   "Update multiple values.
    Values will be updated in reverse order.
-   e.g. provided [:a1 :b1 :c1]: c1 will update, followed by b1, followed by a1."
+   e.g. provided [:a1 :b1 :c1], c1 will update, followed by b1, followed by a1."
   [state ids]
   ((apply comp (for [id ids] #(update-value % id)))
    state))
@@ -257,53 +264,16 @@
         (assoc-in [id :value] formula))))
 
 (defn error-values
+  "Error out multiple cells."
   [state ids]
   ((apply comp (for [id ids] #(error-value % id)))
    state))
 
 
-(defn update-value-chain-old
-  "Update the values of a given cell and its descendents, in topological order via dfs."
-  [state cell-id]
-  (loop [to-visit [cell-id]
-         visited #{}
-         sorted []
-         cyclical? false]
-    (let [current
-          (peek to-visit)
-          unvisited-children
-          (when current
-            (->> state
-                 current
-                 :children
-                 (filter (complement visited))
-                 (filter (complement (into #{} to-visit)))
-                 not-empty))
-          found-cyclical?
-          (when current
-            (->> state
-                 current
-                 :children
-                 (some (complement (into #{} to-visit)))))]
-      (cond
-        (empty? to-visit)
-        (update-values state (reverse sorted))
-
-        unvisited-children
-        (recur (into to-visit unvisited-children)
-               visited
-               sorted
-               (or cyclical? found-cyclical?))
-
-        :else
-        (recur (pop to-visit)
-               (conj visited current)
-               (if (visited current) sorted (conj sorted current))
-               (or cyclical? found-cyclical?))))))
-
-
 (defn build-value-chain
-  "Update the values of a given cell and its descendents, in topological order via dfs."
+  "Return a map with two keys, :chain and :cyclical.
+   :chain is a list of the id of the given cell and all its descendents, in topological order.
+   :cyclical is a boolean, indicating whether a cyclical reference was found."
   [state cell-id]
   (loop [to-visit [cell-id]
          visited #{}
@@ -345,6 +315,8 @@
 
 
 (defn update-value-chain
+  "Update the values of a cell and its descendents.
+   If there is a cyclical reference, all cells will be errored."
   [state cell-id]
   (let [{cyclical? :cyclical chain :chain} (build-value-chain state cell-id)]
     (if cyclical?
