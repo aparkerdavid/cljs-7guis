@@ -10,7 +10,7 @@
     "watch-css": "npx postcss-cli -w ./src/css/main.css -o ./resources/public/main.css",
     "build-css": "npx postcss-cli ./src/css/main.css -o ./resources/public/main.css",
     "watch-app": "npx shadow-cljs watch app test",
-    "dev": "npm run watch-app && npm run watch-css",
+    "dev": "npm run watch-app & npm run watch-css",
     "build-prod": "npx shadow-cljs release app && npm run build-css",
     "deploy": "npm run build-prod && npx netlify deploy --prod"
   },
