@@ -25,6 +25,7 @@
   []
   [block
    "Counter"
+   [:p "Click to increment."]
    [counter]])
 
 
@@ -32,6 +33,7 @@
   []
   [block
    "Temperature Converter"
+   [:p "Convert between Celsius and Fahrenheit as you type."]
    [temperature-converter]])
 
 
@@ -46,8 +48,8 @@
      "Input is validated incrementally, and input boxes turn red when an input is incorrect rather than just incomplete. 
       The goal is to avoid telling the user they're 'doing it wrong' unless they've really made a mistake, in which case we want to let them know ASAP."]
     [:p
-     "An even better solution would be to just use date pickers,
-              but that might defeat the purpose of the exercise."]]
+     "(An even better idea would be to just use date pickers,
+              but that might defeat the purpose of the exercise.)"]]
    [flight-booker]])
 
 
@@ -55,6 +57,7 @@
   []
   [block
    "Timer"
+   [:p "Try using the slider to adjust the remaining time while the timer is running!"]
    [timer]])
 
 
@@ -62,7 +65,7 @@
   []
   [block
    "CRUD"
-   "Collapses to a single-column layout on mobile."
+   "Entries can be added, modified, or removed from the list, and filtered by last name."
    [crud]])
 
 
@@ -71,14 +74,7 @@
   [block
    "Circles"
    [:<>
-    [:p
-     "The prompt calls for the circle size adjustment to appear in a popup window, but that's a bad idea.
-             A modal would be close to the original intent, 
-             but it makes more sense to repurpose the existing Undo/Redo control area."]
-    [:p
-     "It also calls for the circles to be drawn unfilled,
-             but I think it's a more interesting exercise if they're filled white,
-             and can thus occlude one another."]]
+    [:p "Click anywhere to draw a circle. Right click on a circle (or long-press on a touch device) to resize it."]]
    [circles]])
 
 
@@ -100,8 +96,9 @@
   [block
    "Spreadsheet"
    [:<>
+    [:p "This spreadsheet uses a simplified formula syntax, where parentheses are only required where necessary to unambiguously describe nested functions."]
     [:p
-     "Formula syntax:"]
+     "For example:"]
     [:table {:class "mt-4"}
      [:tr
       [:td [:code "5"]] [:td {:class "px-4"} "→ " [:code "5"]]]
