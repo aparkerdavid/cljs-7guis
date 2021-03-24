@@ -149,7 +149,7 @@
       "Flight booked!"]
      [:p
       "Your flight leaves on " [:span.whitespace-nowrap (state :departure-date)] "."]
-     (when (some? (state :return-date))
+     (when ((complement empty?) (state :return-date))
        [:p
         {:class ["mt-1"]}
         "Your return flight leaves on " [:span.whitespace-nowrap (state :return-date)] "."])]
